@@ -7,17 +7,18 @@
 
   Install with [component(1)](https://github.com/component/component):
 
-  `quick start`
+### Quick Start
 
   ```html
 <script src='http://rets.ly/js/sdk'></script>
   ```
 
-  `build from source`
+### Build from source
 
-  `$ component install Retsly/retsly-js-sdk`
-
-  `$ component build -o ./ -n retsly-js-sdk`
+  ```bash
+  $ component install Retsly/retsly-js-sdk
+  $ component build -o ./ -n retsly-js-sdk
+  ```
 
 ## API
 
