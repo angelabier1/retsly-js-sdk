@@ -5,15 +5,15 @@
 
 ## Installation
 
-  Install with [component(1)](https://github.com/component/component):
-
-### Quick Start
+#### Quick Start
 
   ```html
 <script src='http://rets.ly/js/sdk'></script>
   ```
 
-### Build from source
+#### Build from source
+
+  Install with [component(1)](https://github.com/component/component):
 
   ```bash
   $ component install Retsly/retsly-js-sdk
