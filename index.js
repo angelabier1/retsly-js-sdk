@@ -10,7 +10,7 @@ exports = module.exports = (function() {
   var Client = function(token, options) {
     this.token = token;
     this.options = _.extend({ urlBase: '', debug: false }, options);
-    var host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost' : 'rets.ly';
+    var host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'dev.rets.ly' : 'rets.ly';
     this.io = io.connect('http://'+host+'/');
     _this = this;
     return this;
