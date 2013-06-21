@@ -1,5 +1,5 @@
 
-var Retsly = module.exports = (function() {
+exports = module.exports = (function() {
 
 /*
  * Constructor with a internal scope reference to _this
