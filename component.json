@@ -1,13 +1,11 @@
 {
   "name": "js-sdk",
-  "repo": "Retsly/js-sdk",
+  "repo": "retsly.js",
   "description": "Retsly JavaScript SDK",
   "version": "0.0.1",
   "keywords": [],
   "dependencies": {
-    "component/jquery": "*",
-    "component/underscore": "*",
-    "solutionio/backbone": "*"
+
   },
   "development": {},
   "license": "MIT",
