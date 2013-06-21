@@ -9,14 +9,14 @@
 
     > quick start
 
-    ```html
-      <script src='http://rets.ly/js/sdk'></script>
-    ```
+  ```html
+    <script src='http://rets.ly/js/sdk'></script>
+  ```
 
     > build from source
 
-    $ component install Retsly/retsly-js-sdk
-    $ component build -o ./ -n retsly-js-sdk
+  $ component install Retsly/retsly-js-sdk
+  $ component build -o ./ -n retsly-js-sdk
 
 ## API
 
