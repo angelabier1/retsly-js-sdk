@@ -1,6 +1,6 @@
 {
-  "name": "retsly.js",
-  "repo": "retsly.js",
+  "name": "retsly-js-sdk",
+  "repo": "Retsly/retsly-js-sdk",
   "description": "Retsly JavaScript SDK",
   "version": "0.0.1",
   "keywords": [],
@@ -11,10 +11,6 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": [
-    "index.js",
-    "template.js"
-  ],
-  "styles": [
-    "js-sdk.css"
+    "index.js"
   ]
 }
