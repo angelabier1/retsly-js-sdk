@@ -17,7 +17,7 @@
 
   ```bash
   $ component install Retsly/retsly-js-sdk
-  $ component build -o ./ -n retsly-js-sdk
+  $ component build -o . -n retsly-js-sdk
   ```
 
 ## API
