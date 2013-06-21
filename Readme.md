@@ -1,5 +1,5 @@
 
-# js-sdk
+# retsly-js-sdk
 
   Retsly JavaScript SDK
 
@@ -7,7 +7,7 @@
 
   Install with [component(1)](http://component.io):
 
-    $ component install Retsly/js-sdk
+    $ component install Retsly/retsly-js-sdk
 
 ## API
 
