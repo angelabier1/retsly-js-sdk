@@ -1,5 +1,5 @@
 
-exports = module.exports = (function() {
+var Retsly = module.exports = exports = (function() {
 
 /*
  * Constructor with a internal scope reference to _this
@@ -7,10 +7,10 @@ exports = module.exports = (function() {
  */
 
   var _this;
-  var Client = function(token, options) {
-    this.token = token;
+  var Client = function(api_key, options) {
+    this.api_key = api_key;
     this.options = _.extend({ urlBase: '', debug: false }, options);
-    var host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'dev.rets.ly' : 'rets.ly';
+    var host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost' : 'rets.ly';
     this.io = io.connect('http://'+host+'/');
     _this = this;
     return this;
@@ -25,7 +25,7 @@ exports = module.exports = (function() {
   };
 
   function RetslyClientNotFoundError() {
-    return new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
+    return new Error('No Restly Client found. Please invoke `new Retsly($api_key)` first.');
   };
 
 /*
@@ -53,7 +53,7 @@ exports = module.exports = (function() {
     var options = {};
     options.method = 'get';
     options.query = query || {};
-    options.query.token = this.token;
+    options.query.api_key = this.api_key;
     return this.request(url, options, cb);
   };
 
@@ -61,7 +61,7 @@ exports = module.exports = (function() {
     var options = {};
     options.method = 'post';
     options.body =  body;
-    options.query = { token: this.token };
+    options.query = { api_key: this.api_key };
     return this.request(url, options, cb);
   };
 
@@ -69,7 +69,7 @@ exports = module.exports = (function() {
     var options = {};
     options.method = 'put';
     options.body = body;
-    options.query = { token: this.token };
+    options.query = { api_key: this.api_key };
     return this.request(url, options, cb);
   };
 
@@ -77,7 +77,7 @@ exports = module.exports = (function() {
     var options = {};
     options.method = 'delete';
     options.body = body;
-    options.query = { token: this.token };
+    options.query = { api_key: this.api_key };
     return this.request(url, options, cb);
   };
 
@@ -85,7 +85,7 @@ exports = module.exports = (function() {
     var options = {};
     options.url = url;
     options.query = query;
-    options.query.token = this.token;
+    options.query.api_key = this.api_key;
     this.io.emit('subscribe', options, icb);
     return this.io.on(method, scb);
   };
@@ -144,9 +144,9 @@ exports = module.exports = (function() {
     switch(syncMethod) {
 
       case 'delete':
-        if(model.retsly.options.debug) console.log('--> delete '+options.url+'/'+model.get('_id'), options.data);
+        if(model.retsly.options.debug) console.log('--> delete '+options.url, options.data);
         model.retsly.del(options.url, model.toJSON(), function(res) {
-          if(model.retsly.options.debug) console.log('<-- delete '+options.url+'/'+model.get('_id'), res);
+          if(model.retsly.options.debug) console.log('<-- delete '+options.url, res);
           if(res.success) {
             if(options.success) options.success(res.bundle, options, res);
           } else {
@@ -162,10 +162,10 @@ exports = module.exports = (function() {
       break;
 
       case 'put':
-        if(model.retsly.options.debug) console.log('--> put '+options.url+'/'+model.get('_id'), model.toJSON());
+        if(model.retsly.options.debug) console.log('--> put '+options.url, model.toJSON());
         var json = model.toJSON(); delete json['_id'];
         model.retsly.put(options.url+'/'+model.get('_id'), json, function(res) {
-          if(model.retsly.options.debug) console.log('<-- put '+options.url+'/'+model.get('_id'), res);
+          if(model.retsly.options.debug) console.log('<-- put '+options.url, res);
           if(res.success) {
             if(options.success) options.success(res.bundle, options, res);
           } else {
@@ -208,11 +208,16 @@ exports = module.exports = (function() {
         model.retsly.get(options.url, options.data, function(res) {
           if(model.retsly.options.debug) console.log('<-- get '+options.url, res);
 
-          if(typeof res.bundle === 'array' && typeof item._id !== 'undefined') {
+          if(res.bundle[0] && typeof res.bundle[0]._id !== 'undefined' && options.url.indexOf('photos') === -1) {
+
+            if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.data);
+            if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url, options.data);
+
             _.each(res.bundle, function(item){
-              if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url+'/'+item._id, options.data);
               model.retsly.subscribe('put', options.url+'/'+item._id, {}, function(res) {
-                if(model.retsly.options.debug) console.log('<-- subscribe:put '+options.url+'/'+item._id, res);
+                //TODO: Figure out why each listing gets fired here
+                if(res.id !== item._id) return;
+                if(model.retsly.options.debug) console.log('<-- subscribe:put '+options.url, res);
                 if(typeof model.get(res.id) === "undefined"){
                   model.add(res.bundle);
                 } else {
@@ -220,9 +225,8 @@ exports = module.exports = (function() {
                   model.trigger('change', model.get(res.id), options, res);
                 }
               });
-              if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url+'/'+item._id, options.data);
               model.retsly.subscribe('delete', options.url+'/'+item._id, {}, function(res) {
-                if(model.retsly.options.debug) console.log('<-- subscribe:delete '+options.url+'/'+item._id, res);
+                if(model.retsly.options.debug) console.log('<-- subscribe:delete '+options.url, res);
                 if(typeof model.get(res.id) !== "undefined"){
                   model.remove(res.bundle);
                 }
@@ -230,7 +234,18 @@ exports = module.exports = (function() {
               });
             });
 
-          } else if(options.url.indexOf('photo') === -1) {
+            if(model.retsly.options.debug) console.log('--> subscribe:post '+options.url, options.data);
+            model.retsly.subscribe('post', options.url, {}, function(res) {
+              if(model.retsly.options.debug) console.log('<-- subscribe:post '+options.url, res);
+              if(typeof model.get(res.id) === "undefined"){
+                model.add(res.bundle);
+              } else {
+                model.get(res.id).set(res.bundle);
+                model.trigger('change', model.get(res.id), options, res);
+              }
+            });
+
+          } /* else {
 
             if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.data);
             model.retsly.subscribe('put', options.url, {}, function(res) {
@@ -242,7 +257,7 @@ exports = module.exports = (function() {
               if(model.retsly.options.debug) console.log('<-- subscribe:delete '+options.url, res);
               model.trigger('remove', model, options, res);
             });
-          }
+          } */
 
           if(res.success) {
             if(options.success) options.success(res.bundle);
@@ -254,16 +269,6 @@ exports = module.exports = (function() {
 
         });
 
-        if(model.retsly.options.debug) console.log('--> subscribe:post '+options.url, options.data);
-        model.retsly.subscribe('post', options.url, {}, function(res) {
-          if(model.retsly.options.debug) console.log('<-- subscribe:post '+options.url, res);
-          if(typeof model.get(res.id) === "undefined"){
-            model.add(res.bundle);
-          } else {
-            model.get(res.id).set(res.bundle);
-            model.trigger('change', model.get(res.id), options, res);
-          }
-        });
       break;
     }
   };
@@ -305,7 +310,7 @@ exports = module.exports = (function() {
         return this.options.callback(listing);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/listing/'+this.get('_id');
+      return _this.options.urlBase+'/listing/'+this.mls_id+'/'+this.get('_id')+'.json';
     }
   });
 
@@ -324,7 +329,7 @@ exports = module.exports = (function() {
       return this;
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/photo/'+this.get('id');
+      return _this.options.urlBase+'/photo/'+this.mls_id+'/'+this.get('id')+'.json';
     }
   });
 
@@ -340,7 +345,7 @@ exports = module.exports = (function() {
       return this;
     },
     url: function() {
-      return _this.options.urlBase+this.collection.mls_id+'/agent/'+this.get('id');
+      return _this.options.urlBase+'/agent/'+this.collection.mls_id+'/'+this.get('id')+'.json';
     }
   });
 
@@ -356,7 +361,7 @@ exports = module.exports = (function() {
       return this;
     },
     url: function() {
-      return _this.options.urlBase+this.collection.mls_id+'/office/'+this.get('id');
+      return _this.options.urlBase+'/office/'+this.collection.mls_id+'/'+this.get('id')+'.json';
     }
   });
 
@@ -372,7 +377,7 @@ exports = module.exports = (function() {
       return this;
     },
     url: function() {
-      return _this.options.urlBase+this.collection.mls_id+'/geography/'+this.get('id');
+      return _this.options.urlBase+'/geography/'+this.collection.mls_id+'/'+this.get('id')+'.json';
     }
   });
 
@@ -403,7 +408,7 @@ exports = module.exports = (function() {
       return new Client.Models.Listing(attrs, { collection: options.collection, mls_id: options.collection.mls_id });
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/listing';
+      return _this.options.urlBase+'/listing/'+this.mls_id+'.json';
     }
   });
 
@@ -422,7 +427,7 @@ exports = module.exports = (function() {
       this.options = _.extend({ }, options);
       this.mls_id = options.mls_id;
 
-      this.url = _this.options.urlBase+this.mls_id+'/listing/'+listing.get('_id')+'/photos';
+      this.url = _this.options.urlBase+'/photo/'+this.mls_id+'/'+listing.get('_id')+'.json';
       return this;
     },
     complete: function() {
@@ -445,7 +450,7 @@ exports = module.exports = (function() {
       return new Client.Models.Agent(attrs, opts);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/agent';
+      return _this.options.urlBase+this.mls_id+'/agent.json';
     }
   });
 
@@ -462,7 +467,7 @@ exports = module.exports = (function() {
       return new Client.Models.Office(attrs, opts);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/listing';
+      return _this.options.urlBase+this.mls_id+'/office.json';
     }
   });
 
@@ -479,7 +484,7 @@ exports = module.exports = (function() {
       return new Client.Models.Geography(attrs, opts);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/listing';
+      return _this.options.urlBase+this.mls_id+'/geography.json';
     }
   });
 
@@ -528,10 +533,8 @@ exports = module.exports = (function() {
       this.$el.html( template({ listing: listing.toJSON(), photos: listing.photos.toJSON() }) );
       this.$el.css({ opacity: 0 }).animate({ opacity: 1 });
       this.$el.find('.listing-detail-wrapper').animate({ left: 0 })
-
     },
     render: function(listing) {
-
       var template = _.template( $('#listing-detail').html() );
       this.$el.css('opacity',0);
       this.$el.html( template({ listing: listing.toJSON(), photos: listing.photos.toJSON() }) );
@@ -693,4 +696,3 @@ exports = module.exports = (function() {
   return Client;
 
 })();
-
