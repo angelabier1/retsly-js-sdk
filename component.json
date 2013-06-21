@@ -4,7 +4,11 @@
   "description": "Retsly JavaScript SDK",
   "version": "0.0.1",
   "keywords": [],
-  "dependencies": {},
+  "dependencies": {
+    "component/jquery": "*",
+    "component/underscore": "*",
+    "solutionio/backbone": "*"
+  },
   "development": {},
   "license": "MIT",
   "main": "index.js",
