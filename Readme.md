@@ -51,11 +51,11 @@
   ```
 
 #### Backbone Models
-  Listing
-  Agent
-  Office
-  Geography
-  Photo
+  - Listing
+  - Agent
+  - Office
+  - Geography
+  - Photo
 
 ## License
 
