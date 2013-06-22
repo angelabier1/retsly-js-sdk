@@ -27,8 +27,8 @@
   a core set of [Models](http://backbonejs.org/#Model) and [Collections](http://backbonejs.org/#Collection)
   which enable proficient use of [Retsly](http://rets.ly) datasets.
 
-  If you aren't a Backbone fan you do not have to use the hosted SDK. You can compile from source, you can use the
-  Core API directly to work with the API. The SDK should fall back gracefully if it does not detect Backbone and still
+  If you aren't a Backbone fan you do not have to use the hosted SDK. You can compile from source and use the
+  Core SDK directly to work with the API. The SDK should fall back gracefully if it does not detect Backbone and still
   enable the use of the [Core Api](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L32) as shown in the
   examples below.
 
