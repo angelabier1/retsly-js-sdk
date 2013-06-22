@@ -4,8 +4,8 @@
                       |  '--'.| .-. '-.  .-(  .-'|  |\  '  /
                       |  |\  \\   --. |  | .-'  `|  | \   '
                       `--' '--'`----' `--' `----'`--.-'  /
-                      Make Real Estate Apps in      `---'
-                         Minutes Not Months
+                        Make Real Estate Apps in   `---'
+                           Minutes Not Months
 
 </pre>
 
