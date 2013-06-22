@@ -9,28 +9,28 @@
 
 #### Dependencies
 
-  The hosted SDK endpoint includes [jQuery](https://github.com/jquery/jquery), 
+  The hosted SDK endpoint includes [jQuery](https://github.com/jquery/jquery),
   [Underscore](https://github.com/documentcloud/underscore/) and [Backbone](https://github.com/documentcloud/backbone)
-  on top of our Core SDK. 
+  on top of our Core SDK.
 
   This is so that components can be built using [Backbone Views](http://backbonejs.org/#View) which leverage
-  a core set of [Models](http://backbonejs.org/#Model) and [Collections](http://backbonejs.org/#Collection) 
+  a core set of [Models](http://backbonejs.org/#Model) and [Collections](http://backbonejs.org/#Collection)
   which enable proficient use of [Retsly](http://rets.ly) datasets.
 
-  If you aren't a Backbone fan you do not have to use the hosted SDK. You can compile from source, you can use the 
+  If you aren't a Backbone fan you do not have to use the hosted SDK. You can compile from source, you can use the
   Core API directly to work with the API. The SDK should fall back gracefully if it does not detect Backbone and still
   enable the use of the [Core Api](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L32) as shown in the
   examples below.
 
 #### Quick Start
 
-  Include the hosted SDK in your HTML header: 
+  Include the hosted SDK in your HTML header:
 
   ```html
 <script src='http://rets.ly/js/sdk'></script>
   ```
 
-  ...OR if you just want the core SDK (No Backbone, jQuery or Underscore):
+  ...OR if you just want the Core SDK (No Backbone, jQuery or Underscore):
 
   ```html
 <script src='http://rets.ly/javascripts/dist/sdk.js'></script>
@@ -53,7 +53,7 @@
 
 ## Examples
 
-#### Core API
+#### Core SDK
 
   ```javascript
   var Retsly = require('retsly-js-sdk');
