@@ -117,12 +117,9 @@
   these components and include them into their source using require:
 
   ```javascript
-    var Component = require('retsly-js-component');
-    var instance = new Component();
-    instance.doSomething();
-    instance.thenSomethingElse(function(){
-      instance.andDone()
-    });
+    var Featured = require('retsly-js-featured');
+    var feature = new Featured('#featured', { limit: 10 });
+    feature.on('click', doSomething);
   ```
 
   When at all possible abstract specific component behavior into it's own component. If you find your feature
