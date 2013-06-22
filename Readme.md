@@ -11,7 +11,7 @@
 
 # retsly-js-sdk
 
-  Retsly JavaScript SDK. Allows developers to integreate with the [Retsly](http://rets.ly) API.
+  Retsly JavaScript SDK. Useful for integration with the [Retsly](http://rets.ly) API.
 
   After you get an API Key you can check out the [API Docs](http://rets.ly/docs).
 
