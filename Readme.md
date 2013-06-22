@@ -117,6 +117,7 @@
   these components and include them into their source using require:
 
   ```javascript
+    // Example of how a featured listing component might work
     var Featured = require('retsly-js-featured');
     var feature = new Featured('#featured', { limit: 10 });
     feature.on('click', doSomething);
