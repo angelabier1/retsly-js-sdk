@@ -93,10 +93,8 @@
 ## Building Retsly Components
 
   Retsly components should be built using [component.io](https://github.com/component/component).
-
-  Components should follow the naming context retsly-js-`name`. All components will be added to the [wiki](#);
-
-  Subsequently, this will allow anyone to install these components and include them into their source using require:
+  Components should follow the naming context retsly-js-`name`. All components will be added to the [wiki](#)
+  This will allow anyone to install these components and include them into their source using require:
 
   ```javascript
     var Component = require('retsly-js-component');
