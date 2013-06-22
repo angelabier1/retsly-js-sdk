@@ -58,12 +58,58 @@
   });
   ```
 
-#### Backbone Models
-  - [Listing](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L282)
-  - [Photo](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L317)
-  - [Agent](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L336)
-  - [Office](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L352)
-  - [Geography](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L368)
+#### Retsly Models
+
+  Retsly models are built on Backbone, so you will need the full SDK with all dependencies to use them.
+
+  - [Retsly.Models.Listing](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L282)
+  - [Retsly.Models.Photo](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L317)
+  - [Retsly.Models.Agent](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L336)
+  - [Retsly.Models.Office](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L352)
+  - [Retsly.Models.Geography](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L368)
+
+#### Retsly Collections
+
+  Retsly collections are built on Backbone, so you will need the full SDK with all dependencies to use them.
+
+  - [Retsly.Collections.Listings](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L390)
+  - [Retsly.Collections.Photos](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L415)
+  - [Retsly.Collections.Agents](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L440)
+  - [Retsly.Collections.Offices](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L457)
+  - [Retsly.Collections.Geographies](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L474)
+
+#### Retsly Views
+
+  Retsly views are built on Backbone so you will need the full SDK with all dependencies to use them.
+
+  `Note: These views will be refactored out of the SDK into their own independent components.`
+
+  - [Retsly.Views.Listing.Detail](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L506)
+  - [Retsly.Views.Listing.PhotoTile](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L553)
+  - [Retsly.Views.Listing.Search](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L604)
+  - [Retsly.Views.Listing.List](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L634)
+
+
+## Building Retsly Components
+
+  Retsly components should be built using [component.io](https://github.com/component/component).
+
+  Components should follow the naming context retsly-js-`name`. All components will be added to the [wiki](#);
+
+  Subsequently, this will allow anyone to install these components and include them into their source using require:
+
+  ```javascript
+    var Component = require('retsly-js-component');
+    var instance = new Component();
+    instance.doSomething();
+    instance.thenSomethingElse(function(){
+      instance.andDone()
+    });
+  ```
+
+  When at all possible abstract specific component behavior into it's own component. If you find your feature
+  includes multiple components, try to separate the logic into individual componets, then require them in your
+  `component.json` file. This granularity will promote the reuse of generic functionality within the Retsly community.
 
 ## License
 
