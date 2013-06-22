@@ -60,6 +60,8 @@
   ```html
 <script src='/path/to/retsly-js-sdk.js'></script>
   ```
+  > If you build your app using [component.io](http://github.com/component/component) you can simply add
+  > `Retsly/retsly-js-sdk` to your `component.json` and install it as a dependency.
 
 ## Examples
 
