@@ -1,7 +1,7 @@
 
 # retsly-js-sdk
 
-  Retsly JavaScript SDK. Allows developers to integreate with [Retsly](http://rets.ly) MLS Data.
+  Retsly JavaScript SDK. Allows developers to integreate with the [Retsly](http://rets.ly) API.
 
   After you get an API Key you can check out the [API Docs](http://rets.ly/docs).
 
@@ -9,10 +9,12 @@
 
 #### Dependencies
 
-  The hosted SDK endpoint includes jQuery, Underscore and Backbone on top of our Core SDK. This is so that components 
-  can be implemented as Backbone Views. We chose this because Backbone is very good with handling large datasets. 
-  You don't however have to use these if you don't want to. If you compile from source, you can use the Core API directly 
-  to work with the API. The SDK should fail gracefully if it does not detect Backbone, jQuery or Underscore.
+  The hosted SDK endpoint includes [jQuery](https://github.com/jquery/jquery), 
+  [Underscore](https://github.com/documentcloud/underscore/) and [Backbone](https://github.com/documentcloud/backbone)
+  on top of our Core SDK. This is so that components can be implemented as Backbone Views. We chose this because Backbone 
+  is very good with handling large datasets. You don't however have to use these if you don't want to. If you 
+  compile from source, you can use the Core API directly to work with the API. The SDK should fail gracefully if 
+  it does not detect Backbone, jQuery or Underscore.
 
 #### Quick Start
 
