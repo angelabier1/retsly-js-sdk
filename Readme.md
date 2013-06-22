@@ -114,7 +114,7 @@
 ## Building Retsly Components
 
   Retsly components should be built using [component.io](https://github.com/component/component).
-  Components should follow the specific naming context retsly-`language`-`name`. Add new components to the
+  Components should follow the specific naming context retsly-`lang_prefix`-`name`. Add new components to the
   [wiki](https://github.com/Retsly/retsly-js-sdk/wiki/Component-List). This will allow anyone to install
   these components and include them into their source using require:
 
