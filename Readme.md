@@ -29,7 +29,7 @@
 
   If you aren't a Backbone fan you do not have to use the hosted SDK. You can compile from source and use the
   Core SDK directly to work with the API. The SDK should fall back gracefully if it does not detect Backbone and still
-  enable the use of the [Core Api](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L32) as shown in the
+  enable the use of the [Core SDK](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L32) as shown in the
   examples below.
 
 #### Quick Start
