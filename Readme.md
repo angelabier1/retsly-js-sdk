@@ -16,11 +16,13 @@
 
 #### Quick Start
 
+  Include the hosted SDK in your HTML header: 
+
   ```html
 <script src='http://rets.ly/js/sdk'></script>
   ```
 
-`OR if you just want the core SDK`
+  OR if you just want the core SDK
 
   ```html
 <script src='http://rets.ly/javascripts/dist/sdk.js'></script>
@@ -35,7 +37,7 @@
   $ component build -o . -n retsly-js-sdk
   ```
 
-  ... then include in your html header:
+  ... then include in your HTML header:
 
   ```html
 <script src='/path/to/retsly-js-sdk.js'></script>
@@ -48,10 +50,12 @@
   ```javascript
   var Retsly = require('retsly-js-sdk');
   var retsly = new Retsly('YOURAPIKEY', { debug: true });
-  retsly.get('/api/v1/sandicor/listing', { limit: 10 }, function(err, res) {
-    if(err) throw err;
-    else console.log(res);
-  })
+  retsly.ready(function(){
+    retsly.get('/api/v1/sandicor/listing', { limit: 10 }, function(err, res) {
+      if(err) throw err;
+      else console.log(res);
+    });
+  });
   ```
 
 #### Backbone Models
