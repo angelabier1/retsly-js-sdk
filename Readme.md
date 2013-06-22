@@ -34,6 +34,9 @@
   $ component install Retsly/retsly-js-sdk
   $ component build -o . -n retsly-js-sdk
   ```
+
+  ... then include in your html header:
+
   ```html
 <script src='/path/to/retsly-js-sdk.js'></script>
   ```
