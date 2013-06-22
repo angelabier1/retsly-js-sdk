@@ -59,11 +59,11 @@
   ```
 
 #### Backbone Models
-  - Listing
-  - Agent
-  - Office
-  - Geography
-  - Photo
+  - [Listing](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L282)
+  - [Photo](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L317)
+  - [Agent](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L336)
+  - [Office](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L352)
+  - [Geography](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L368)
 
 ## License
 
