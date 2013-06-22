@@ -5,24 +5,59 @@
 
 ## Installation
 
+#### Dependencies
+
+  The hosted SDK endpoint includes jQuery, Underscore and Backbone on top of our Core SDK. This is so that components 
+  can be implemented as Backbone Views. We chose this because Backbone is very good with handling large datasets. 
+  You don't however have to use these if you don't want to. If you compile from source, you can use the Core API directly 
+  to work with the API. The SDK should fail gracefully if it does not detect Backbone, jQuery or Underscore.
+
 #### Quick Start
 
   ```html
 <script src='http://rets.ly/js/sdk'></script>
   ```
 
+`OR if you just want the core SDK`
+
+  ```html
+<script src='http://rets.ly/javascripts/dist/sdk.js'></script>
+  ```
+
 #### Build from source
 
-  Install with [component(1)](https://github.com/component/component):
+  Install with [component.io](https://github.com/component/component):
 
   ```bash
   $ component install Retsly/retsly-js-sdk
   $ component build -o . -n retsly-js-sdk
   ```
+  ```html
+<script src='/path/to/retsly-js-sdk.js'></script>
+  ```
 
-## API
+## Examples
 
+#### API Explorer
+  [Click Here](http://rets.ly/docs)
 
+#### Core API
+
+  ```javascript
+  var Retsly = require('retsly-js-sdk');
+  var retsly = new Retsly('YOURAPIKEY', { debug: true });
+  retsly.get('/api/v1/sandicor/listing', { limit: 10 }, function(err, res) {
+    if(err) throw err;
+    else console.log(res);
+  })
+  ```
+
+#### Backbone Models
+  Listing
+  Agent
+  Office
+  Geography
+  Photo
 
 ## License
 
