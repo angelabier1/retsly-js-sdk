@@ -22,7 +22,7 @@
 <script src='http://rets.ly/js/sdk'></script>
   ```
 
-  OR if you just want the core SDK
+  ...OR if you just want the core SDK (No Backbone, jQuery or Underscore):
 
   ```html
 <script src='http://rets.ly/javascripts/dist/sdk.js'></script>
