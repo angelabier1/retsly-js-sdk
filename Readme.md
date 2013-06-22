@@ -101,7 +101,7 @@
   Retsly views are built on Backbone so you will need the full SDK with all dependencies to use them.
 
   > **Note**: These views maybe be refactored out of the SDK into their own independent components soon.
-  > Only very graunular reusable views should be existsed in the `retsly-js-sdk`.
+  > Only very graunular reusable views should exist in the `retsly-js-sdk`.
 
   - [Retsly.Views.Listing.Detail](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L506)
   - [Retsly.Views.Listing.PhotoTile](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L553)
