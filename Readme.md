@@ -11,10 +11,16 @@
 
   The hosted SDK endpoint includes [jQuery](https://github.com/jquery/jquery), 
   [Underscore](https://github.com/documentcloud/underscore/) and [Backbone](https://github.com/documentcloud/backbone)
-  on top of our Core SDK. This is so that components can be implemented as Backbone Views. We chose this because Backbone 
-  is very good with handling large datasets. You don't however have to use these if you don't want to. If you 
-  compile from source, you can use the Core API directly to work with the API. The SDK should fail gracefully if 
-  it does not detect Backbone, jQuery or Underscore.
+  on top of our Core SDK. 
+
+  This is so that components can be built using [Backbone Views](http://backbonejs.org/#View) which leverage
+  a core set of [Models](http://backbonejs.org/#Model) and [Collections](http://backbonejs.org/#Collection) 
+  which enable proficient use of [Retsly](http://rets.ly) datasets.
+
+  If you aren't a Backbone fan you do not have to use the hosted SDK. You can compile from source, you can use the 
+  Core API directly to work with the API. The SDK should fall back gracefully if it does not detect Backbone and still
+  enable the use of the [Core Api](https://github.com/Retsly/retsly-js-sdk/blob/master/index.js#L32) as shown in the
+  examples below.
 
 #### Quick Start
 
