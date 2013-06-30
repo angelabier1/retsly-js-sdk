@@ -288,7 +288,7 @@ var Retsly = module.exports = exports = (function() {
         throw new RetslyClientNotFoundError();
 
       if(typeof options !== 'undefined' && !options.mls_id)
-        throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: "sandicor"}`');
+        throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: mls.id}`');
 
       this.retsly = _this;
       this.options = _.extend({}, options);
@@ -395,7 +395,7 @@ var Retsly = module.exports = exports = (function() {
         throw new RetslyClientNotFoundError();
 
       if(typeof options !== 'undefined' && !options.mls_id)
-        throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: "sandicor"}`');
+        throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: mls.id}`');
 
       this.retsly = _this;
       this.options = _.extend({ }, options);
@@ -420,7 +420,7 @@ var Retsly = module.exports = exports = (function() {
         throw new RetslyClientNotFoundError();
 
       if(typeof options !== 'undefined' && !options.mls_id)
-        throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: "sandicor"}`');
+        throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: mls.id}`');
 
       this.retsly = _this;
       this.listing = listing;
@@ -610,10 +610,10 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(options) {
 
       if(typeof options == "undefined" || !options.target)
-        throw new Error('Retsly.View.Listing.Search must have a target: `{target:this}`');
+        throw new Error('Retsly.View.Listing.Search must have a target: `{target: this}`');
 
       if(typeof options == "undefined" || !options.collection)
-        throw new Error('Retsly.View.Listing.Search must have update a listing collection: `{collection:this.listings}`');
+        throw new Error('Retsly.View.Listing.Search must have update a listing collection: `{collection: this.listings}`');
 
       options.target = (typeof options.target.$el !== "undefined") ? options.target.$el : $(options.target)
 
@@ -637,13 +637,13 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(options) {
 
       if(typeof options == "undefined" || !options.mls_id)
-        throw new Error('Retsly.View.Listing.List requires you to pass a mls_id: `{mls_id:"sandicor"}`');
+        throw new Error('Retsly.View.Listing.List requires you to pass a mls_id: `{mls_id: mls.id}`');
 
       if(typeof options == "undefined" || !options.target)
-        throw new Error('Retsly.View.Listing.List is a subview and must have a target: `{target:this}`');
+        throw new Error('Retsly.View.Listing.List is a subview and must have a target: `{target: this}`');
 
       if(typeof options == "undefined" || !options.details)
-        throw new Error('Retsly.View.Listing.List must have a details url: `{details:"/listing/:id"}`');
+        throw new Error('Retsly.View.Listing.List must have a details url: `{details: "/listing/:id"}`');
 
       this.options = _.extend({ query: { limit: 10 }, search: true, tile: Client.Views.Listing.PhotoTile }, options);
 
