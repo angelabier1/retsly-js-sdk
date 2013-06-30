@@ -631,7 +631,7 @@ var Retsly = module.exports = exports = (function() {
     }
   });
 
-  Client.Views.Listing.List = Backbone.View.extend({
+  Client.Views.IDX = Backbone.View.extend({
     tagName: 'div',
     className: 'listings row-fluid',
     initialize: function(options) {
