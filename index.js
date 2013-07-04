@@ -10,7 +10,7 @@ var Retsly = module.exports = exports = (function() {
   var Client = function(api_key, options) {
     this.api_key = api_key;
     this.options = _.extend({ urlBase: '', debug: false }, options);
-    this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io';
+    this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.ly';
     this.io = io.connect('http://'+this.host+'/');
     this.init_stack = [];
     this.init();
