@@ -10,8 +10,10 @@ var Retsly = module.exports = exports = (function() {
   var Client = function(api_key, options) {
     this.api_key = api_key;
     this.options = _.extend({ urlBase: '', debug: false }, options);
-    var host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.ly';
-    this.io = io.connect('http://'+host+'/');
+    this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io';
+    this.io = io.connect('http://'+this.host+'/');
+    this.init_stack = [];
+    this.init();
     _this = this;
     return this;
   };
@@ -32,17 +34,32 @@ var Retsly = module.exports = exports = (function() {
  * Request API, lowest layer of socket abstraction
  */
 
-  Client.prototype.ready = function(cb) {
-    var self = this;
+  Client.prototype.init = function() {
+
+    if($(document.body).hasClass('retsly')) return this.ready();
     if(this.options.debug) console.log('--> Loading Retsly SDK...');
+
+    $('<link>').attr({
+        media: 'all', rel: 'stylesheet',
+        href: 'http://'+this.host+'/css/sdk'
+      }).appendTo('head');
+
+    var self = this;
     this.get('/api/v1/templates', {}, function(res) {
       if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
       if(res.success) {
-        $(document.body).append('<div id="retsly-templates" />');
+        $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
         $('#retsly-templates').append(res.bundle);
-        if(cb && typeof cb === 'function') cb();
+        self.ready();
       }
     });
+  };
+
+  Client.prototype.ready = function(cb) {
+
+    if(cb) this.init_stack.push(cb);
+    else _.each(this.init_stack, function(c) { if(typeof c === 'function') c(); });
+
   };
 
   Client.prototype.request = function(url, options, cb) {
@@ -89,13 +106,6 @@ var Retsly = module.exports = exports = (function() {
     this.io.emit('subscribe', options, icb);
     return this.io.on(method, scb);
   };
-
-/*  Clients don't need the ability to publish / broadcast to other clients just yet.
- *  Need to put some more thought in how this can be useful for inter client communication.
- *  Client.prototype.publish = function(url, body, cb) {
- *    this.io.emit(url, body, cb);
- *  };
- */
 
 /*
  * Retsly Backbone sync over websockets
@@ -245,19 +255,7 @@ var Retsly = module.exports = exports = (function() {
               }
             });
 
-          } /* else {
-
-            if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.data);
-            model.retsly.subscribe('put', options.url, {}, function(res) {
-              if(model.retsly.options.debug) console.log('<-- subscribe:put '+options.url, res);
-              model.trigger('change', model.get(res.id), options, res);
-            });
-            if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url, options.data);
-            model.retsly.subscribe('delete', options.url, {}, function(res) {
-              if(model.retsly.options.debug) console.log('<-- subscribe:delete '+options.url, res);
-              model.trigger('remove', model, options, res);
-            });
-          } */
+          }
 
           if(res.success) {
             if(options.success) options.success(res.bundle);
@@ -265,7 +263,17 @@ var Retsly = module.exports = exports = (function() {
           } else {
             model.trigger('error', model, options, res);
           }
+
+          //TODO: Refactor del, post, put to use this?
+          //TODO: Should this just be rolled into options.success / options.error?
+          // My thought is that success / error are immediate and bound to the model.
+          // complete should fire when all sub collections / models are loaded.
           if(model.complete) model.complete(res.bundle, options, res);
+          if(model.models) {
+            _.each(model.models, function(model) {
+              if(model.complete) model.complete(res.bundle, options, res);
+            });
+          }
 
         });
 
@@ -301,13 +309,6 @@ var Retsly = module.exports = exports = (function() {
     complete: function() {
       this.photos = new Client.Collections.Photos(this, this.options);
       this.photos.fetch();
-    },
-    photosComplete: function(listing) {
-      if(this.collection && typeof this.collection.trigger === 'function')
-        this.collection.trigger('add', listing);
-
-      if(typeof this.options.callback === 'function')
-        return this.options.callback(listing);
     },
     url: function() {
       return _this.options.urlBase+'/listing/'+this.mls_id+'/'+this.get('_id')+'.json';
@@ -401,9 +402,6 @@ var Retsly = module.exports = exports = (function() {
       this.options = _.extend({ }, options);
       this.mls_id = options.mls_id;
     },
-    complete: function() {
-      _.each(this.models, function(model) { model.complete(arguments); });
-    },
     model: function(attrs, options) {
       return new Client.Models.Listing(attrs, { collection: options.collection, mls_id: options.collection.mls_id });
     },
@@ -430,10 +428,10 @@ var Retsly = module.exports = exports = (function() {
       this.url = _this.options.urlBase+'/photo/'+this.mls_id+'/'+listing.get('_id')+'.json';
       return this;
     },
-    complete: function() {
+    complete: function(photos) {
       if(this.listing) this.listing.set('Photos', this);
-      if(this.listing && typeof this.listing.photosComplete == 'function')
-        this.listing.photosComplete(this.listing);
+      if(typeof this.options.complete === 'function')
+        this.options.complete(this.listing);
     }
   });
 
