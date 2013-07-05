@@ -9,7 +9,7 @@ var Retsly = module.exports = exports = (function() {
   var _this;
   var Client = function(api_key, options) {
     this.api_key = api_key;
-    this.options = _.extend({ urlBase: '', debug: false }, options);
+    this.options = _.extend({ urlBase: '/api/v1', debug: false }, options);
     this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.ly';
     this.io = io.connect('http://'+this.host+'/');
     this.init_stack = [];
@@ -154,7 +154,7 @@ var Retsly = module.exports = exports = (function() {
     switch(syncMethod) {
 
       case 'delete':
-        if(model.retsly.options.debug) console.log('--> delete '+options.url, options.data);
+        if(model.retsly.options.debug) console.log('--> delete '+options.url, options.query || {});
         model.retsly.del(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- delete '+options.url, res);
           if(res.success) {
@@ -193,7 +193,7 @@ var Retsly = module.exports = exports = (function() {
       break;
 
       case 'post':
-        if(model.retsly.options.debug) console.log('--> post '+options.url, options.data);
+        if(model.retsly.options.debug) console.log('--> post '+options.url, options.query || {});
         model.retsly.post(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- post '+options.url, res);
           if(res.success) {
@@ -214,14 +214,14 @@ var Retsly = module.exports = exports = (function() {
 
       case 'get': default:
 
-        if(model.retsly.options.debug) console.log('--> get '+options.url, options.data);
-        model.retsly.get(options.url, options.data, function(res) {
+        if(model.retsly.options.debug) console.log('--> get '+options.url, options.query || {});
+        model.retsly.get(options.url, options.query, function(res) {
           if(model.retsly.options.debug) console.log('<-- get '+options.url, res);
 
           if(res.bundle[0] && typeof res.bundle[0]._id !== 'undefined' && options.url.indexOf('photos') === -1) {
 
-            if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.data);
-            if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url, options.data);
+            if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.query || {});
+            if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url, options.query || {});
 
             _.each(res.bundle, function(item){
               model.retsly.subscribe('put', options.url+'/'+item._id, {}, function(res) {
@@ -244,7 +244,7 @@ var Retsly = module.exports = exports = (function() {
               });
             });
 
-            if(model.retsly.options.debug) console.log('--> subscribe:post '+options.url, options.data);
+            if(model.retsly.options.debug) console.log('--> subscribe:post '+options.url, options.query || {});
             model.retsly.subscribe('post', options.url, {}, function(res) {
               if(model.retsly.options.debug) console.log('<-- subscribe:post '+options.url, res);
               if(typeof model.get(res.id) === "undefined"){
