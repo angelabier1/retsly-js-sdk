@@ -56,10 +56,8 @@ var Retsly = module.exports = exports = (function() {
   };
 
   Client.prototype.ready = function(cb) {
-
     if(cb) this.init_stack.push(cb);
     else _.each(this.init_stack, function(c) { if(typeof c === 'function') c(); });
-
   };
 
   Client.prototype.request = function(url, options, cb) {
