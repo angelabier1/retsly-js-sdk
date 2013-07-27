@@ -36,16 +36,17 @@ var Retsly = module.exports = exports = (function() {
 
   Client.prototype.init = function() {
 
-    if($(document.body).hasClass('retsly')) return this.ready();
-    if(this.options.debug) console.log('--> Loading Retsly SDK...');
+    var self = this;
+
+    if($(document.body).hasClass('retsly')) return self.ready();
+    if(self.options.debug) console.log('--> Loading Retsly SDK...');
 
     $('<link>').attr({
         media: 'all', rel: 'stylesheet',
-        href: 'http://'+this.host+'/css/sdk'
+        href: 'http://'+self.host+'/css/sdk'
       }).appendTo('head');
 
-    var self = this;
-    this.get('/api/v1/templates', {}, function(res) {
+    self.get('/api/v1/templates', {}, function(res) {
       if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
       if(res.success) {
         $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
@@ -103,6 +104,21 @@ var Retsly = module.exports = exports = (function() {
     options.query.api_key = this.api_key;
     this.io.emit('subscribe', options, icb);
     return this.io.on(method, scb);
+  };
+
+  var cookies;
+  Client.prototype.getCookie = function (name,c,C,i){
+
+    c = document.cookie.split('; ');
+    cookies = {};
+
+    for(i=c.length-1; i>=0; i--){
+      C = c[i].split('=');
+      cookies[C[0]] = C[1];
+    }
+
+    //console.log('cookie:', cookies[name])
+    return cookies[name];
   };
 
 /*
