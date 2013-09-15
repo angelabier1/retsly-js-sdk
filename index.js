@@ -46,7 +46,7 @@ var Retsly = module.exports = exports = (function() {
         href: 'http://'+self.host+'/css/sdk'
       }).appendTo('head');
 
-    self.get('/api/v1/templates', {}, function(res) {
+    this.get('/api/v1/templates', {}, function(res) {
       if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
       if(res.success) {
         $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
