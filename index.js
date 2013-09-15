@@ -38,8 +38,8 @@ var Retsly = module.exports = exports = (function() {
 
     var self = this;
 
-    if($(document.body).hasClass('retsly')) return self.ready();
-    if(self.options.debug) console.log('--> Loading Retsly SDK...');
+    if($(document.body).hasClass('retsly')) return this.ready();
+    if(this.options.debug) console.log('--> Loading Retsly SDK...');
 
     $('<link>').attr({
         media: 'all', rel: 'stylesheet',
