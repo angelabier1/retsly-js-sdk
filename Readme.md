@@ -46,34 +46,45 @@
 <script src='http://rets.ly/javascripts/dist/sdk.js'></script>
   ```
 
-#### Build from source
+#### Use with component
 
   Install with [component.io](https://github.com/component/component):
 
   ```bash
-  $ component install Retsly/retsly-js-sdk
-  $ component build -o . -n retsly-js-sdk
-  ```
-
-  ... then include in your HTML header:
-
-  ```html
-<script src='/path/to/retsly-js-sdk.js'></script>
+  $ component install retsly/retsly-js-sdk
   ```
   > If you build your app using [component.io](http://github.com/component/component) you can simply add
   > `Retsly/retsly-js-sdk` to your `component.json` and build it into your component as a dependency.
+
+#### Build from source
+
+  Clone the repo and build the standalone file:
+
+  ```bash
+  $ git clone https://github.com/Retsly/retsly-js-sdk
+  $ cd retsly-js-sdk
+  $ make standalone
+  ```
+  
+  Include in your project:
+
+  ```html
+  <script src='/path/to/dist/retsly-js-sdk.js'></script>
+  ```
+
+  This will export the client SDK as an AMD or CommonJS module, and you can use 
+  the `Retsly` global if you're not using a module system in your project.
 
 ## Examples
 
 #### Core SDK
 
   ```javascript
-  var Retsly = require('retsly-js-sdk');
   var retsly = new Retsly('YOURAPIKEY', { debug: true });
   retsly.ready(function(){
-    retsly.get('/api/v1/sandicor/listing', { limit: 10 }, function(err, res) {
-      if(err) throw err;
-      else console.log(res);
+    retsly.get('/api/v1/listing/sandicor.json', { limit: 10 }, function(res) {
+      if (!res.success) throw new Error(res.bundle);
+      console.log(res);
     });
   });
   ```
