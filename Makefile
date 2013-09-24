@@ -1,14 +1,14 @@
 
-build: components index.js js-sdk.css template.js
+build: components index.js styles/style.css
 	@component build --dev
 
-template.js: template.html
-	@component convert $<
+standalone: components index.js styles/style.css
+	@component build -s Retsly -o dist -n retsly-js-sdk
 
 components: component.json
 	@component install --dev
 
 clean:
-	rm -fr build components template.js
+	rm -fr build components
 
 .PHONY: clean
