@@ -69,7 +69,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'get';
     options.query = query || {};
-    options.query.api_key = this.api_key;
+    options.query.access_token = this.api_key;
     return this.request(url, options, cb);
   };
 
@@ -77,7 +77,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'post';
     options.body =  body;
-    options.query = { api_key: this.api_key };
+    options.query = { access_token: this.api_key };
     return this.request(url, options, cb);
   };
 
@@ -85,7 +85,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'put';
     options.body = body;
-    options.query = { api_key: this.api_key };
+    options.query = { access_token: this.api_key };
     return this.request(url, options, cb);
   };
 
@@ -93,7 +93,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'delete';
     options.body = body;
-    options.query = { api_key: this.api_key };
+    options.query = { access_token: this.api_key };
     return this.request(url, options, cb);
   };
 
@@ -101,7 +101,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.url = url;
     options.query = query;
-    options.query.api_key = this.api_key;
+    options.query.access_token = this.api_key;
     this.io.emit('subscribe', options, icb);
     return this.io.on(method, scb);
   };
