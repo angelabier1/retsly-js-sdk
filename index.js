@@ -188,7 +188,7 @@ var Retsly = module.exports = exports = (function() {
       case 'put':
         if(model.retsly.options.debug) console.log('--> put '+options.url, model.toJSON());
         var json = model.toJSON(); delete json['_id'];
-        model.retsly.put(options.url+'/'+model.get('_id'), json, function(res) {
+        model.retsly.put(options.url, json, function(res) {
           if(model.retsly.options.debug) console.log('<-- put '+options.url, res);
           if(res.success) {
             if(options.success) options.success(res.bundle, options, res);
