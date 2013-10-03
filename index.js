@@ -197,7 +197,7 @@ var Retsly = module.exports = exports = (function() {
           }
           if(model.complete) model.complete(res.bundle, options, res);
           if(typeof model.get(res.id) === "undefined"){
-            model.add(res.bundle);
+            if(typeof model.add === 'function') model.add(res.bundle);
           } else {
             model.get(res.id).set(res.bundle);
             model.trigger('change', model.get(res.id), options, res);
@@ -217,7 +217,7 @@ var Retsly = module.exports = exports = (function() {
           }
           if(model.complete) model.complete(res.bundle, options, res);
           if(typeof model.get(res.id) === "undefined"){
-            model.add(res.bundle);
+            if(typeof model.add === 'function') model.add(res.bundle);
           } else {
             model.get(res.id).set(res.bundle);
             model.trigger('change', model.get(res.id), options, res);
@@ -243,7 +243,7 @@ var Retsly = module.exports = exports = (function() {
                 if(res.id !== item._id) return;
                 if(model.retsly.options.debug) console.log('<-- subscribe:put '+options.url, res);
                 if(typeof model.get(res.id) === "undefined"){
-                  model.add(res.bundle);
+                  if(typeof model.add === 'function') model.add(res.bundle);
                 } else {
                   model.get(res.id).set(res.bundle);
                   model.trigger('change', model.get(res.id), options, res);
@@ -262,7 +262,7 @@ var Retsly = module.exports = exports = (function() {
             model.retsly.subscribe('post', options.url, {}, function(res) {
               if(model.retsly.options.debug) console.log('<-- subscribe:post '+options.url, res);
               if(typeof model.get(res.id) === "undefined"){
-                model.add(res.bundle);
+                if(typeof model.add === 'function') model.add(res.bundle);
               } else {
                 model.get(res.id).set(res.bundle);
                 model.trigger('change', model.get(res.id), options, res);
