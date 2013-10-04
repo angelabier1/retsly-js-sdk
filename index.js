@@ -128,6 +128,16 @@ var Retsly = module.exports = exports = (function() {
   // If no Backbone, stop here.
   if(typeof Backbone === "undefined") return Client;
 
+  /**
+   * HTTP uses response.bundle, sockets use response. Normalize them.
+   */
+  Backbone.Model.prototype.parse = function(response, options) {
+    return response.bundle ? response.bundle : response;
+  };
+  Backbone.Collection.prototype.parse = function(response, options) {
+    return response.bundle ? response.bundle : response;
+  };
+
   Backbone.Model.prototype.idAttribute = "_id";
   Backbone.ajaxSync = Backbone.sync;
 
