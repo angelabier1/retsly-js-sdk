@@ -131,6 +131,18 @@ var Retsly = module.exports = exports = (function() {
   Backbone.Model.prototype.idAttribute = "_id";
   Backbone.ajaxSync = Backbone.sync;
 
+  /**
+   * Extend our API calls to include Authorization header
+   * when sent over HTTP
+   */
+  Backbone.origAjax = Backbone.ajax;
+  Backbone.ajax = function(request) {
+    request.beforeSend = function(jqXHR, settings) {
+      jqXHR.setRequestHeader("Authorization", 'Bearer '+_this.api_key);
+    };
+    Backbone.origAjax(request);
+  };
+
   Backbone.getSyncMethod = function(model) {
     if(model.transport == 'socket' || (model.collection && model.collection.transport == 'socket')) {
       return Backbone.socket;
@@ -142,8 +154,7 @@ var Retsly = module.exports = exports = (function() {
     return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
   };
 
-/* Main socket hack for rets.ly over socket.io */
-
+  /* Main socket hack for rets.ly over socket.io */
   Backbone.socket = function(method, model, options) {
     var resp, errorMessage;
 
