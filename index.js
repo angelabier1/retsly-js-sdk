@@ -142,8 +142,7 @@ var Retsly = module.exports = exports = (function() {
   Backbone.ajaxSync = Backbone.sync;
 
   /**
-   * Extend our API calls to include Authorization header
-   * when sent over HTTP
+   * Authenticate HTTP requests with Authorization header
    */
   Backbone.origAjax = Backbone.ajax;
   Backbone.ajax = function(request) {
