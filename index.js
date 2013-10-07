@@ -163,7 +163,8 @@ var Retsly = module.exports = exports = (function() {
     return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
   };
 
-  /* Main socket hack for rets.ly over socket.io */
+/* Main socket hack for rets.ly over socket.io */
+
   Backbone.socket = function(method, model, options) {
     var resp, errorMessage;
 
