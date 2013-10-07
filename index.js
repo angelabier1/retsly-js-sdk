@@ -121,7 +121,7 @@ var Retsly = module.exports = exports = (function() {
     return cookies[name];
   };
 
-  Client.prorotype.setCookie = function (name,value,days) {
+  Client.prototype.setCookie = function (name,value,days) {
     if (days) {
       var date = new Date();
       date.setTime(date.getTime()+(days*24*60*60*1000));
