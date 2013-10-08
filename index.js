@@ -54,8 +54,6 @@ var Retsly = module.exports = exports = (function() {
           $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
           $('#retsly-templates').append(res.bundle);
 
-          if(document.location.href.indexOf(self.host) > -1) return self.ready();
-
           // <!-- Make sure you ask @slajax before changing this
           $.ajax({
             type: 'POST', xhrFields: { withCredentials: true },
@@ -63,7 +61,7 @@ var Retsly = module.exports = exports = (function() {
             url:'http://'+self.host+'/api/v1/session',
             success: function(sid) {
               self.io.emit('authorize', { sid: sid }, function(data) {
-                self.setCookie('retsly.sid', data.bundle);
+                if(typeof data.bundle === 'string') self.setCookie('retsly.sid', data.bundle);
                 self.ready();
               });
             }
