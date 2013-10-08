@@ -42,18 +42,23 @@ var Retsly = module.exports = exports = (function() {
     if(this.options.debug) console.log('--> Loading Retsly SDK...');
 
     $('<link>').attr({
-        media: 'all', rel: 'stylesheet',
-        href: 'http://'+self.host+'/css/sdk'
-      }).appendTo('head');
+      media: 'all', rel: 'stylesheet',
+      href: 'http://'+self.host+'/css/sdk'
+    }).appendTo('head');
 
     this.get('/api/v1/templates', {}, function(res) {
       if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
       if(res.success) {
         $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
         $('#retsly-templates').append(res.bundle);
-        self.ready();
+
+        self.io.emit('authorize', function(data) {
+          if(!data.success) self.setCookie('retsly.sid', data.bundle);
+          self.ready();
+        });
       }
     });
+
   };
 
   Client.prototype.ready = function(cb) {
@@ -121,7 +126,7 @@ var Retsly = module.exports = exports = (function() {
     return cookies[name];
   };
 
-  Client.prorotype.setCookie = function (name,value,days) {
+  Client.prototype.setCookie = function (name,value,days) {
     if (days) {
       var date = new Date();
       date.setTime(date.getTime()+(days*24*60*60*1000));
@@ -130,7 +135,6 @@ var Retsly = module.exports = exports = (function() {
     else var expires = "";
     document.cookie = name+"="+value+expires+"; path=/";
   };
-
 
 /*
  * Retsly Backbone sync over websockets
