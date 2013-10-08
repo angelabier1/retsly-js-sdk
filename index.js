@@ -194,7 +194,7 @@ var Retsly = module.exports = exports = (function() {
   Backbone.origAjax = Backbone.ajax;
   Backbone.ajax = function(request) {
     request.beforeSend = function(jqXHR, settings) {
-      jqXHR.setRequestHeader("Authorization", 'Bearer '+_this.api_key);
+      jqXHR.setRequestHeader("Authorization", 'Bearer '+_this.token);
     };
     Backbone.origAjax(request);
   };
