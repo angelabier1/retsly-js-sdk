@@ -7,8 +7,8 @@ var Retsly = module.exports = exports = (function() {
  */
 
   var _this;
-  var Client = function(api_key, options) {
-    this.api_key = (api_key === 'codepen') ? '515d07227912d558223e68f2' : api_key;
+  var Client = function(token, options) {
+    this.token = (token === 'codepen') ? '515d07227912d558223e68f2' : token;
     this.options = _.extend({ urlBase: '/api/v1', debug: false }, options);
     this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io';
     this.io = io.connect('http://'+this.host+'/', {'sync disconnect on unload':false});
@@ -27,7 +27,7 @@ var Retsly = module.exports = exports = (function() {
   };
 
   function RetslyClientNotFoundError() {
-    return new Error('No Restly Client found. Please invoke `new Retsly($api_key)` first.');
+    return new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
   };
 
 /*
@@ -41,24 +41,56 @@ var Retsly = module.exports = exports = (function() {
     if($(document.body).hasClass('retsly')) return this.ready();
     if(this.options.debug) console.log('--> Loading Retsly SDK...');
 
-    $('<link>').attr({
+    var css = $('<link>').attr({
       media: 'all', rel: 'stylesheet',
       href: 'http://'+self.host+'/css/sdk'
-    }).appendTo('head');
-
-    this.get('/api/v1/templates', {}, function(res) {
-      if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
-      if(res.success) {
-        $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
-        $('#retsly-templates').append(res.bundle);
-
-        self.io.emit('authorize', function(data) {
-          if(!data.success) self.setCookie('retsly.sid', data.bundle);
-          self.ready();
-        });
-      }
     });
 
+    css.load(function() {
+
+      self.get('/api/v1/templates', {}, function(res) {
+        if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
+        if(res.success) {
+          $(document.body).addClass('retsly').append('<div id="retsly-templates" />');
+          $('#retsly-templates').append(res.bundle);
+
+          if(document.location.href.indexOf(self.host) > -1) return self.ready();
+
+          // <!-- Make sure you ask @slajax before changing this
+          $.ajax({
+            type: 'POST', xhrFields: { withCredentials: true },
+            data: { origin: document.location.protocol+'//'+document.domain, action: 'set' },
+            url:'http://'+self.host+'/api/v1/session',
+            success: function(sid) {
+              self.io.emit('authorize', { sid: sid }, function(data) {
+                self.setCookie('retsly.sid', data.bundle);
+                self.ready();
+              });
+            }
+          });
+          // Make sure you ask @slajax before changing this -->
+
+        }
+      });
+
+    });
+
+    css.appendTo('head');
+
+  };
+
+  //TODO: Make this restful. It's way too fucken late right now.
+  Client.prototype.logout = function(cb) {
+    var cb = cb || function() {};
+    $.ajax({
+      type: 'POST', xhrFields: { withCredentials: true },
+      data: { origin: document.location.protocol+'//'+document.domain, action: 'del' },
+      url:'http://'+this.host+'/api/v1/session',
+      error: console.log,
+      success: function(data) {
+        console.log(data);
+      }
+    });
   };
 
   Client.prototype.ready = function(cb) {
@@ -74,7 +106,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'get';
     options.query = query || {};
-    options.query.access_token = this.api_key;
+    options.query.access_token = this.token;
     return this.request(url, options, cb);
   };
 
@@ -82,7 +114,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'post';
     options.body =  body;
-    options.query = { access_token: this.api_key };
+    options.query = { access_token: this.token };
     return this.request(url, options, cb);
   };
 
@@ -90,7 +122,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'put';
     options.body = body;
-    options.query = { access_token: this.api_key };
+    options.query = { access_token: this.token };
     return this.request(url, options, cb);
   };
 
@@ -98,7 +130,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'delete';
     options.body = body;
-    options.query = { access_token: this.api_key };
+    options.query = { access_token: this.token };
     return this.request(url, options, cb);
   };
 
@@ -106,7 +138,7 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.url = url;
     options.query = query;
-    options.query.access_token = this.api_key;
+    options.query.access_token = this.token;
     this.io.emit('subscribe', options, icb);
     return this.io.on(method, scb);
   };
