@@ -7,8 +7,12 @@ var Retsly = module.exports = exports = (function() {
  */
 
   var _this;
-  var Client = function(token, options) {
-    this.token = (token === 'codepen') ? '515d07227912d558223e68f2' : token;
+  var Client = function(client_id, options) {
+
+    if(!client_id)
+      throw new Error('You must provide a client_id - ie: new Retsly("xxx");')
+
+    this.client_id = client_id, this.token = null;
     this.options = _.extend({ urlBase: '/api/v1', debug: false }, options);
     this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io';
     this.io = io.connect('http://'+this.host+'/', {'sync disconnect on unload':false});
@@ -16,18 +20,6 @@ var Retsly = module.exports = exports = (function() {
     this.init();
     _this = this;
     return this;
-  };
-
-/*
- * Error Handlers
- */
-
-  var RetslyClientError = function(msg) {
-    return new Error(msg);
-  };
-
-  function RetslyClientNotFoundError() {
-    return new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
   };
 
 /*
@@ -47,7 +39,6 @@ var Retsly = module.exports = exports = (function() {
     });
 
     css.load(function() {
-
       self.get('/api/v1/templates', {}, function(res) {
         if(self.options.debug) console.log('<-- Retsly SDK Loaded! App Ready!');
         if(res.success) {
@@ -67,7 +58,6 @@ var Retsly = module.exports = exports = (function() {
             }
           });
           // Make sure you ask @slajax before changing this -->
-
         }
       });
 
@@ -77,18 +67,25 @@ var Retsly = module.exports = exports = (function() {
 
   };
 
-  //TODO: Make this restful. It's way too fucken late right now.
+  //TODO kyle: Make this restful. It's way too fucken late right now.
   Client.prototype.logout = function(cb) {
-    var cb = cb || function() {};
+    var success = cb || function() {};
     $.ajax({
       type: 'POST', xhrFields: { withCredentials: true },
       data: { origin: document.location.protocol+'//'+document.domain, action: 'del' },
       url:'http://'+this.host+'/api/v1/session',
-      error: console.log,
-      success: function(data) {
-        console.log(data);
-      }
+      error: function(error) { throw new Error(error); },
+      success: success
     });
+  };
+
+  // Set an oauth token for extended privileges.
+  Client.prototype.setToken = function(token) {
+    this.token = token;
+  };
+
+  Client.prototype.getToken = function() {
+    return this.token;
   };
 
   Client.prototype.ready = function(cb) {
@@ -104,7 +101,11 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'get';
     options.query = query || {};
-    options.query.access_token = this.token;
+    options.query.client_id = this.client_id;
+
+    if(this.getToken())
+      options.query.access_token = this.getToken();
+
     return this.request(url, options, cb);
   };
 
@@ -112,7 +113,11 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'post';
     options.body =  body;
-    options.query = { access_token: this.token };
+    options.query = { client_id: this.client_id };
+
+    if(this.getToken())
+      options.query.access_token = this.getToken();
+
     return this.request(url, options, cb);
   };
 
@@ -120,7 +125,11 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'put';
     options.body = body;
-    options.query = { access_token: this.token };
+    options.query = { client_id: this.client_id };
+
+     if(this.getToken())
+      options.query.access_token = this.getToken();
+
     return this.request(url, options, cb);
   };
 
@@ -128,7 +137,11 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.method = 'delete';
     options.body = body;
-    options.query = { access_token: this.token };
+    options.query = { client_id: this.client_id };
+
+    if(this.getToken())
+      options.query.access_token = this.getToken();
+
     return this.request(url, options, cb);
   };
 
@@ -136,23 +149,23 @@ var Retsly = module.exports = exports = (function() {
     var options = {};
     options.url = url;
     options.query = query;
-    options.query.access_token = this.token;
+    options.query.client_id = this.client_id;
+
+    if(this.getToken())
+      options.query.access_token = this.getToken();
+
     this.io.emit('subscribe', options, icb);
     return this.io.on(method, scb);
   };
 
   var cookies;
   Client.prototype.getCookie = function (name,c,C,i){
-
     c = document.cookie.split('; ');
     cookies = {};
-
     for(i=c.length-1; i>=0; i--){
       C = c[i].split('=');
       cookies[C[0]] = C[1];
     }
-
-    //console.log('cookie:', cookies[name])
     return cookies[name];
   };
 
@@ -373,7 +386,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       if(typeof options !== 'undefined' && !options.mls_id)
         throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: mls.id}`');
@@ -401,7 +414,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.options = _.extend({ mls_id: this.mls_id }, options);
       this.mls_id = options.mls_id;
@@ -420,7 +433,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.retsly = _this;
       return this;
@@ -436,7 +449,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.retsly = _this;
       return this;
@@ -452,7 +465,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.retsly = _this;
       return this;
@@ -473,7 +486,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       if(typeof options !== 'undefined' && !options.mls_id)
         throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: mls.id}`');
@@ -495,7 +508,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(listing, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       if(typeof options !== 'undefined' && !options.mls_id)
         throw new Error('Retsly.Models.Listing requires a mls_id `{mls_id: mls.id}`');
@@ -520,7 +533,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.retsly = _this;
     },
@@ -537,7 +550,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.retsly = _this;
     },
@@ -554,7 +567,7 @@ var Retsly = module.exports = exports = (function() {
     initialize: function(attrs, options) {
 
       if(typeof _this === 'undefined')
-        throw new RetslyClientNotFoundError();
+        throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
       this.retsly = _this;
     },
