@@ -98,9 +98,10 @@ var Retsly = module.exports = exports = (function() {
   };
 
   Client.prototype.get = function(url, query, cb) {
+
     var options = {};
     options.method = 'get';
-    options.query = query || {};
+    options.query = typeof query === "object" ? query : {};
     options.query.client_id = this.client_id;
 
     if(this.getToken())
@@ -112,7 +113,7 @@ var Retsly = module.exports = exports = (function() {
   Client.prototype.post = function(url, body, cb) {
     var options = {};
     options.method = 'post';
-    options.body =  body;
+    options.body =  typeof body === "object" ? body : {};
     options.query = { client_id: this.client_id };
 
     if(this.getToken())
@@ -124,7 +125,7 @@ var Retsly = module.exports = exports = (function() {
   Client.prototype.put = function(url, body, cb) {
     var options = {};
     options.method = 'put';
-    options.body = body;
+    options.body =  typeof body === "object" ? body : {};
     options.query = { client_id: this.client_id };
 
      if(this.getToken())
@@ -136,7 +137,7 @@ var Retsly = module.exports = exports = (function() {
   Client.prototype.del = function(url, body, cb) {
     var options = {};
     options.method = 'delete';
-    options.body = body;
+    options.body =  typeof body === "object" ? body : {};
     options.query = { client_id: this.client_id };
 
     if(this.getToken())
@@ -312,41 +313,45 @@ var Retsly = module.exports = exports = (function() {
           if(model.retsly.options.debug) console.log('<-- get '+options.url, res);
 
           if(res.bundle[0] && typeof res.bundle[0]._id !== 'undefined' && options.url.indexOf('photos') === -1) {
-
-            if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.query || {});
-            if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url, options.query || {});
-
-            _.each(res.bundle, function(item){
-              model.retsly.subscribe('put', options.url+'/'+item._id, {}, function(res) {
-                //TODO: Figure out why each listing gets fired here
-                if(res.id !== item._id) return;
-                if(model.retsly.options.debug) console.log('<-- subscribe:put '+options.url, res);
-                if(typeof model.get(res.id) === "undefined"){
-                  if(typeof model.add === 'function') model.add(res.bundle);
-                } else {
-                  model.get(res.id).set(res.bundle);
-                  model.trigger('change', model.get(res.id), options, res);
-                }
-              });
-              model.retsly.subscribe('delete', options.url+'/'+item._id, {}, function(res) {
-                if(model.retsly.options.debug) console.log('<-- subscribe:delete '+options.url, res);
-                if(typeof model.get(res.id) !== "undefined"){
-                  model.remove(res.bundle);
-                }
-
-              });
-            });
-
-            if(model.retsly.options.debug) console.log('--> subscribe:post '+options.url, options.query || {});
-            model.retsly.subscribe('post', options.url, {}, function(res) {
-              if(model.retsly.options.debug) console.log('<-- subscribe:post '+options.url, res);
-              if(typeof model.get(res.id) === "undefined"){
-                if(typeof model.add === 'function') model.add(res.bundle);
-              } else {
-                model.get(res.id).set(res.bundle);
-                model.trigger('change', model.get(res.id), options, res);
-              }
-            });
+/*
+ *  DISABLED FOR NOW. TODO KYLE TO FIX.
+ *
+ *            if(model.retsly.options.debug) console.log('--> subscribe:put '+options.url, options.query || {});
+ *            if(model.retsly.options.debug) console.log('--> subscribe:delete '+options.url, options.query || {});
+ *
+ *            _.each(res.bundle, function(item){
+ *              model.retsly.subscribe('put', options.url+'/'+item._id, {}, function(res) {
+ *                //TODO: Figure out why each listing gets fired here
+ *                if(res.id !== item._id) return;
+ *                if(model.retsly.options.debug) console.log('<-- subscribe:put '+options.url, res);
+ *                if(typeof model.get(res.id) === "undefined"){
+ *                  if(typeof model.add === 'function') model.add(res.bundle);
+ *                } else {
+ *                  model.get(res.id).set(res.bundle);
+ *                  model.trigger('change', model.get(res.id), options, res);
+ *                }
+ *              });
+ *              model.retsly.subscribe('delete', options.url+'/'+item._id, {}, function(res) {
+ *                if(model.retsly.options.debug) console.log('<-- subscribe:delete '+options.url, res);
+ *                if(typeof model.get(res.id) !== "undefined"){
+ *                  model.remove(res.bundle);
+ *                }
+ *              });
+ *            });
+ *
+ *            if(model.retsly.options.debug) console.log('--> subscribe:post '+options.url, options.query || {});
+ *            model.retsly.subscribe('post', options.url, {}, function(res) {
+ *              if(model.retsly.options.debug) console.log('<-- subscribe:post '+options.url, res);
+ *              if(typeof model.get(res.id) === "undefined"){
+ *                if(typeof model.add === 'function') model.add(res.bundle);
+ *              } else {
+ *                model.get(res.id).set(res.bundle);
+ *                model.trigger('change', model.get(res.id), options, res);
+ *              }
+ *            });
+ *
+ *  DISABLED FOR NOW. TODO KYLE TO FIX.
+ */
 
           }
 
