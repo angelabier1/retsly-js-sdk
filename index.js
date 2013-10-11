@@ -248,7 +248,7 @@ var Retsly = module.exports = exports = (function() {
     switch(syncMethod) {
 
       case 'delete':
-        if(model.retsly.options.debug) console.log('--> delete '+options.url, options.query || {});
+        if(model.retsly.options.debug) console.log('--> delete '+options.url, options.data || {});
         model.retsly.del(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- delete '+options.url, res);
           if(res.success) {
@@ -287,7 +287,7 @@ var Retsly = module.exports = exports = (function() {
       break;
 
       case 'post':
-        if(model.retsly.options.debug) console.log('--> post '+options.url, options.query || {});
+        if(model.retsly.options.debug) console.log('--> post '+options.url, options.data || {});
         model.retsly.post(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- post '+options.url, res);
           if(res.success) {
@@ -308,8 +308,8 @@ var Retsly = module.exports = exports = (function() {
 
       case 'get': default:
 
-        if(model.retsly.options.debug) console.log('--> get '+options.url, options.query || {});
-        model.retsly.get(options.url, options.query, function(res) {
+        if(model.retsly.options.debug) console.log('--> get '+options.url, options.data || {});
+        model.retsly.get(options.url, options.data, function(res) {
           if(model.retsly.options.debug) console.log('<-- get '+options.url, res);
 
           if(res.bundle[0] && typeof res.bundle[0]._id !== 'undefined' && options.url.indexOf('photos') === -1) {
