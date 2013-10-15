@@ -246,8 +246,7 @@ var Retsly = module.exports = exports = (function() {
     var syncMethod = methodMap[method].toLowerCase();
 
     switch(syncMethod) {
-
-      case 'delete':
+      case 'del':
         if(model.retsly.options.debug) console.log('--> delete '+options.url, options.data || {});
         model.retsly.del(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- delete '+options.url, res);
@@ -535,18 +534,20 @@ var Retsly = module.exports = exports = (function() {
 
   Client.Collections.Agents = Backbone.Collection.extend({
     transport: 'socket',
-    initialize: function(attrs, options) {
+    initialize: function(models, options) {
 
       if(typeof _this === 'undefined')
         throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
+      this.options = _.extend({}, options);
+      this.mls_id = this.options.mls_id;
       this.retsly = _this;
     },
     model: function(attrs, opts) {
       return new Client.Models.Agent(attrs, opts);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/agent.json';
+      return _this.options.urlBase+'/agent/'+this.mls_id+'.json';
     }
   });
 
@@ -557,13 +558,15 @@ var Retsly = module.exports = exports = (function() {
       if(typeof _this === 'undefined')
         throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
+      this.options = _.extend({}, options);
+      this.mls_id = this.options.mls_id;
       this.retsly = _this;
     },
     model: function(attrs, opts) {
       return new Client.Models.Office(attrs, opts);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/office.json';
+      return _this.options.urlBase+'/office/'+this.mls_id+'.json';
     }
   });
 
@@ -574,13 +577,15 @@ var Retsly = module.exports = exports = (function() {
       if(typeof _this === 'undefined')
         throw new Error('No Restly Client found. Please invoke `new Retsly($token)` first.');
 
+      this.options = _.extend({}, options);
+      this.mls_id = this.options.mls_id;
       this.retsly = _this;
     },
     model: function(attrs, opts) {
       return new Client.Models.Geography(attrs, opts);
     },
     url: function() {
-      return _this.options.urlBase+this.mls_id+'/geography.json';
+      return _this.options.urlBase+'/geography/'+this.mls_id+'.json';
     }
   });
 
