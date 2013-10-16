@@ -253,6 +253,7 @@ var Retsly = module.exports = exports = (function() {
           if(res.success) {
             if(options.success) options.success(res.bundle, options, res);
           } else {
+            if(typeof options.error == 'function') options.error(model, res, options);
             model.trigger('error', model, options, res);
           }
           if(model.complete) model.complete(res.bundle, options, res);
@@ -272,6 +273,7 @@ var Retsly = module.exports = exports = (function() {
           if(res.success) {
             if(options.success) options.success(res.bundle, options, res);
           } else {
+            if(typeof options.error == 'function') options.error(model, res, options);
             model.trigger('error', model, res, options);
           }
           if(model.complete) model.complete(res.bundle, options, res);
@@ -292,6 +294,7 @@ var Retsly = module.exports = exports = (function() {
           if(res.success) {
             if(options.success) options.success(res.bundle, options, res);
           } else {
+            if(typeof options.error == 'function') options.error(model, res, options);
             model.trigger('error', model, res, options);
           }
           if(model.complete) model.complete(res.bundle, options, res);
@@ -358,6 +361,7 @@ var Retsly = module.exports = exports = (function() {
             if(options.success) options.success(res.bundle);
             model.trigger('reset', model, options, res);
           } else {
+            if(typeof options.error == 'function') options.error(model, res, options);
             model.trigger('error', model, options, res);
           }
 
