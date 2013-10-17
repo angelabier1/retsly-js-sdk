@@ -251,9 +251,9 @@ var Retsly = module.exports = exports = (function() {
         model.retsly.del(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- delete '+options.url, res);
           if(res.success) {
-            if(options.success) options.success(res.bundle, options, res);
+            if(typeof options.success == 'function') options.success(res);
           } else {
-            if(typeof options.error == 'function') options.error(model, res, options);
+            if(typeof options.error == 'function') options.error(res);
             model.trigger('error', model, options, res);
           }
           if(model.complete) model.complete(res.bundle, options, res);
@@ -271,9 +271,9 @@ var Retsly = module.exports = exports = (function() {
         model.retsly.put(options.url, json, function(res) {
           if(model.retsly.options.debug) console.log('<-- put '+options.url, res);
           if(res.success) {
-            if(options.success) options.success(res.bundle, options, res);
+            if(typeof options.success == 'function') options.success(res);
           } else {
-            if(typeof options.error == 'function') options.error(model, res, options);
+            if(typeof options.error == 'function') options.error(res);
             model.trigger('error', model, res, options);
           }
           if(model.complete) model.complete(res.bundle, options, res);
@@ -292,9 +292,9 @@ var Retsly = module.exports = exports = (function() {
         model.retsly.post(options.url, model.toJSON(), function(res) {
           if(model.retsly.options.debug) console.log('<-- post '+options.url, res);
           if(res.success) {
-            if(options.success) options.success(res.bundle, options, res);
+            if(typeof options.success == 'function') options.success(res);
           } else {
-            if(typeof options.error == 'function') options.error(model, res, options);
+            if(typeof options.error == 'function') options.error(res);
             model.trigger('error', model, res, options);
           }
           if(model.complete) model.complete(res.bundle, options, res);
@@ -358,10 +358,10 @@ var Retsly = module.exports = exports = (function() {
           }
 
           if(res.success) {
-            if(options.success) options.success(res.bundle);
+            if(typeof options.success == 'function') options.success(res);
             model.trigger('reset', model, options, res);
           } else {
-            if(typeof options.error == 'function') options.error(model, res, options);
+            if(typeof options.error == 'function') options.error(res);
             model.trigger('error', model, options, res);
           }
 
