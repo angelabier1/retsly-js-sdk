@@ -17,7 +17,6 @@ var Retsly = module.exports = exports = (function() {
     this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io';
     this.io = io.connect('http://'+this.host+'/', {'sync disconnect on unload':false});
     this.init_stack = [];
-    console.log(RETSLY_CONF);
     this.init();
     _this = this;
     return this;
