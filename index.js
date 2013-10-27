@@ -17,6 +17,7 @@ var Retsly = module.exports = exports = (function() {
     this.host = (typeof RETSLY_CONF != "undefined" && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io';
     this.io = io.connect('http://'+this.host+'/', {'sync disconnect on unload':false});
     this.init_stack = [];
+    console.log(RETSLY_CONF);
     this.init();
     _this = this;
     return this;
@@ -49,7 +50,7 @@ var Retsly = module.exports = exports = (function() {
           $.ajax({
             type: 'POST', xhrFields: { withCredentials: true },
             data: { origin: document.location.protocol+'//'+document.domain, action: 'set' },
-            url:'http://'+self.host+'/api/v1/session',
+            url:'http://'+self.host+'/api/v1/session?origin='+document.domain,
             success: function(sid) {
               self.io.emit('authorize', { sid: sid }, function(data) {
                 if(typeof data.bundle === 'string') self.setCookie('retsly.sid', data.bundle);
