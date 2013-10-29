@@ -1,3 +1,4 @@
+function protocol() { return window.location.protocol + '//'; }
 
 var Retsly = module.exports = exports = (function() {
 
@@ -15,7 +16,7 @@ var Retsly = module.exports = exports = (function() {
     this.client_id = client_id, this.token = null;
     this.options = _.extend({ urlBase: '/api/v1', debug: false }, options);
     this.host = (RETSLY_CONF && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io:80';
-    this.io = io.connect('http://'+this.host+'/', {'sync disconnect on unload':false});
+    this.io = io.connect(protocol()+this.host+'/', {'sync disconnect on unload':false});
     this.init_stack = [];
     this.init();
     _this = this;
@@ -35,7 +36,7 @@ var Retsly = module.exports = exports = (function() {
 
     var css = $('<link>').attr({
       media: 'all', rel: 'stylesheet',
-      href: 'http://'+self.host+'/css/sdk'
+      href: protocol()+self.host+'/css/sdk'
     });
 
     css.load(function() {
@@ -49,7 +50,7 @@ var Retsly = module.exports = exports = (function() {
           $.ajax({
             type: 'POST', xhrFields: { withCredentials: true },
             data: { origin: document.location.protocol+'//'+document.domain, action: 'set' },
-            url:'http://'+self.host+'/api/v1/session?origin='+document.domain,
+            url: protocol()+self.host+'/api/v1/session?origin='+document.domain,
             success: function(sid) {
               self.io.emit('authorize', { sid: sid }, function(data) {
                 if(typeof data.bundle === 'string') self.setCookie('retsly.sid', data.bundle);
@@ -73,7 +74,7 @@ var Retsly = module.exports = exports = (function() {
     $.ajax({
       type: 'POST', xhrFields: { withCredentials: true },
       data: { origin: document.location.protocol+'//'+document.domain, action: 'del' },
-      url:'http://'+this.host+'/api/v1/session',
+      url: protocol()+this.host+'/api/v1/session',
       error: function(error) { throw new Error(error); },
       success: success
     });
