@@ -15,7 +15,7 @@ var Retsly = module.exports = exports = (function() {
 
     this.client_id = client_id, this.token = null;
     this.options = _.extend({ urlBase: '/api/v1', debug: false }, options);
-    this.host = (RETSLY_CONF && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io:80';
+    this.host = (RETSLY_CONF && RETSLY_CONF.env === 'development') ? 'localhost:3000' : 'rets.io:443';
     this.io = io.connect(protocol()+this.host+'/', {'sync disconnect on unload':false});
     this.init_stack = [];
     this.init();
