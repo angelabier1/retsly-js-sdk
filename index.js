@@ -206,6 +206,8 @@ var Retsly = module.exports = exports = (function() {
   Backbone.origAjax = Backbone.ajax;
   Backbone.ajax = function(request) {
     request.beforeSend = function(jqXHR, settings) {
+      var concat = (settings.url.indexOf('?') > -1) ? '&' : '?';
+      settings.url = settings.url+concat+'client_id='+_this.client_id;
       jqXHR.setRequestHeader("Authorization", 'Bearer '+_this.token);
     };
     Backbone.origAjax(request);
