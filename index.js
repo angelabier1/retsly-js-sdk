@@ -410,10 +410,6 @@ var Retsly = module.exports = exports = (function() {
 
       return this;
     },
-    complete: function() {
-      this.photos = new Client.Collections.Photos(this, this.options);
-      this.photos.fetch();
-    },
     url: function() {
       return _this.options.urlBase+'/listing/'+this.mls_id+'/'+this.get('_id')+'.json';
     }
