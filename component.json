@@ -5,15 +5,14 @@
   "version": "0.0.1",
   "keywords": [],
   "dependencies": {
-
+    "jashkenas/underscore": "1.5.2",
+    "LearnBoost/socket.io-client": "1.0.0"
   },
-  "development": {},
+  "development": {
+    "timoxley/assert": "*"
+  },
   "license": "MIT",
   "main": "index.js",
-  "scripts": [
-    "index.js"
-  ],
-  "styles": [
-    "styles/style.css"
-  ]
+  "scripts": ["index.js"],
+  "styles": ["styles/style.css"]
 }

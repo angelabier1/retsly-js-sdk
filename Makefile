@@ -8,7 +8,10 @@ standalone: components index.js styles/style.css
 components: component.json
 	@component install --dev
 
+test:
+	@mocha --ui qunit --reporter spec
+
 clean:
 	rm -fr build components
 
-.PHONY: clean
+.PHONY: clean test
