@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../build/build.css" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="http://codeorigin.jquery.com/jquery-1.10.2.js"></script>
+    <script src="../build/build.js"></script>
+    <script>
+      require('mocha')
+      mocha.setup('qunit')
+    </script>
+    <script src="./index.js"></script>
+    <script>
+    mocha
+      .checkLeaks()
+      .run()
+    </script>
+  </body>
+</html>

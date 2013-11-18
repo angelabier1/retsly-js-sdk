@@ -4,12 +4,13 @@
   "description": "Retsly JavaScript SDK",
   "version": "0.0.1",
   "dependencies": {
-    "LearnBoost/socket.io-client": "*",
+    "niclupien/socket.io-client": "*",
     "jashkenas/underscore": "*",
     "ForbesLindesay/ajax": "*"
   },
   "development": {
-    "timoxley/assert": "*"
+    "timoxley/assert": "*",
+    "visionmedia/mocha": "*"
   },
   "license": "MIT",
   "main": "index.js",
