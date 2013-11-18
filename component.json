@@ -5,8 +5,9 @@
   "version": "0.0.1",
   "dependencies": {
     "niclupien/socket.io-client": "*",
-    "jashkenas/underscore": "*",
-    "ForbesLindesay/ajax": "*"
+    "ForbesLindesay/ajax": "*",
+    "component/each": "*",
+    "segmentio/extend": "*"
   },
   "development": {
     "timoxley/assert": "*",

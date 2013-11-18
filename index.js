@@ -2,10 +2,10 @@
 /**
  * Dependencies
  */
-var extend = require('underscore').extend;
-var each = require('underscore').each;
-var io = require('socket.io-client');
+var extend = require('extend');
+var io = require('socket.io');
 var ajax = require('ajax');
+var each = require('each');
 
 var PROTOCOL = 'https://';
 var DOMAIN = 'rets.ly';
@@ -25,7 +25,7 @@ function Retsly (client_id, options) {
     throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
 
   this.client_id = client_id, this.token = null;
-  this.options = _.extend({ urlBase: '/api/v1', debug: false }, options);
+  this.options = extend({ urlBase: '/api/v1', debug: false }, options);
   this.host = (document.domain.indexOf('dev.rets.ly') > -1) ? 'dev.rets.io:443' : 'rets.io:443';
   this.io = io.connect(PROTOCOL+this.host+'/', {'sync disconnect on unload':false});
   this.init_stack = [];
@@ -98,11 +98,11 @@ Retsly.prototype.getToken = function() {
 
 Retsly.prototype.ready = function(cb) {
   if(cb) this.init_stack.push(cb);
-  else _.each(this.init_stack, function(c) { if(typeof c === 'function') c(); });
+  else each(this.init_stack, function(c) { if(typeof c === 'function') c(); });
 };
 
 Retsly.prototype.request = function(url, options, cb) {
-  this.io.emit('api', _.extend({ url: url }, options), cb);
+  this.io.emit('api', extend({ url: url }, options), cb);
 };
 
 Retsly.prototype.get = function(url, query, cb) {
