@@ -24,8 +24,9 @@ function Retsly (client_id, options) {
   if (!client_id)
     throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
 
-  this.client_id = client_id, this.token = null;
-  this.options = extend({ urlBase: '/api/v1', debug: false }, options);
+  this.client_id = client_id;
+  this.token = null;
+  this.options = extend({urlBase: '/api/v1'}, options);
   this.host = (document.domain.indexOf('dev.rets.ly') > -1) ? 'dev.rets.io:443' : 'rets.io:443';
   this.io = io.connect(PROTOCOL+this.host+'/', {'sync disconnect on unload':false});
 
@@ -48,7 +49,7 @@ Retsly.prototype.init = function() {
     url: PROTOCOL+self.host+'/api/v1/session?origin='+document.domain,
     success: function(sid) {
       self.io.emit('authorize', { sid: sid }, function(data) {
-        if(typeof data.bundle === 'string') self.setCookie('retsly.sid', data.bundle);
+        if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
         debug('<-- Retsly SDK Loaded!');
         self.ready();
       });
@@ -65,7 +66,7 @@ Retsly.prototype.logout = function(cb) {
     xhrFields: { withCredentials: true },
     data: { origin: document.location.protocol+'//'+document.domain, action: 'del' },
     url: PROTOCOL+this.host+'/api/v1/session',
-    error: function(error) { throw new Error(error); },
+    error: function (error) { throw new Error(error); },
     success: success
   });
 };
@@ -80,61 +81,24 @@ Retsly.prototype.getToken = function() {
 };
 
 Retsly.prototype.ready = function(cb) {
-  if(cb) this.__init_stack.push(cb);
+  if (cb) this.__init_stack.push(cb);
   else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
 };
 
-Retsly.prototype.request = function(url, options, cb) {
-  this.io.emit('api', extend({ url: url }, options), cb);
-};
-
 Retsly.prototype.get = function(url, query, cb) {
-
-  var options = {};
-  options.method = 'get';
-  options.query = typeof query === 'object' ? query : {};
-  options.query.client_id = this.client_id;
-
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  return this.request(url, options, cb);
+  return this.request('get', url, query, cb);
 };
 
 Retsly.prototype.post = function(url, body, cb) {
-  var options = {};
-  options.method = 'post';
-  options.body =  typeof body === 'object' ? body : {};
-  options.query = { client_id: this.client_id };
-
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  return this.request(url, options, cb);
+  return this.request('post', url, options, cb);
 };
 
 Retsly.prototype.put = function(url, body, cb) {
-  var options = {};
-  options.method = 'put';
-  options.body =  typeof body === 'object' ? body : {};
-  options.query = { client_id: this.client_id };
-
-   if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  return this.request(url, options, cb);
+  return this.request('put', url, options, cb);
 };
 
 Retsly.prototype.del = function(url, body, cb) {
-  var options = {};
-  options.method = 'delete';
-  options.body =  typeof body === 'object' ? body : {};
-  options.query = { client_id: this.client_id };
-
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  return this.request(url, options, cb);
+  return this.request('delete', options, cb);
 };
 
 Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
@@ -150,27 +114,41 @@ Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
   return this.io.on(method, scb);
 };
 
-var cookies;
-Retsly.prototype.getCookie = function (name,c,C,i){
+Retsly.prototype.request = function(method, url, query, cb) {
+  // query is optional
+  if (undefined === cb && 'function' == typeof query) {
+    cb = query;
+    query = {};
+  }
+  var options = {};
+  options.method = method;
+  options.query = query || {};
+  options.url = url;
+  options.query.access_token = this.getToken();
+  options.query.client_id = this.client_id;
+  this.io.emit('api', options, cb);
+  return this;
+};
+
+function getCookie (name,c,C,i){
   c = document.cookie.split('; ');
-  cookies = {};
+  var cookies = {};
   for(i=c.length-1; i>=0; i--){
     C = c[i].split('=');
     cookies[C[0]] = C[1];
   }
   return cookies[name];
-};
+}
 
-Retsly.prototype.setCookie = function (name,value,days) {
+function setCookie (name, value, days) {
+  var expires = '';
   if (days) {
     var date = new Date();
     date.setTime(date.getTime()+(days*24*60*60*1000));
-    var expires = '; expires='+date.toGMTString();
+    expires = '; expires='+date.toGMTString();
   }
-  else var expires = '';
   document.cookie = name+'='+value+expires+'; path=/';
-};
-
+}
 
 /**
  * Log only if debug mode
