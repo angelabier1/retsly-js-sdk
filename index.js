@@ -28,7 +28,7 @@ function Retsly (client_id, options) {
   this.token = null;
   this.options = extend({urlBase: '/api/v1'}, options);
   this.host = DOMAIN;
-  this.io = io.connect(PROTOCOL+DOMAIN+'/', {'sync disconnect on unload':false});
+  this.io = io.connect(PROTOCOL+DOMAIN, {'sync disconnect on unload':false});
 
   this.__init_stack = [];
   this.init();
@@ -54,8 +54,8 @@ Retsly.prototype.init = function() {
   ajax({
     type: 'POST',
     xhrFields: { withCredentials: true },
-    data: { origin: document.location.protocol+'//'+document.domain, action: 'set' },
-    url: this.getURL('session?origin='+document.domain),
+    data: { origin: getOrigin(), action: 'set' },
+    url: this.getURL('session'),
     success: function(sid) {
       self.io.emit('authorize', { sid: sid }, function(data) {
         if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
@@ -73,7 +73,7 @@ Retsly.prototype.logout = function(cb) {
   ajax({
     type: 'POST',
     xhrFields: { withCredentials: true },
-    data: { origin: document.location.protocol+'//'+document.domain, action: 'del' },
+    data: { origin: getOrigin(), action: 'del' },
     url: this.getURL('session'),
     error: function (error) { throw new Error(error); },
     success: success
@@ -174,6 +174,13 @@ function getDomain () {
   if (~document.domain.indexOf('dev.rets.ly')) domain = 'dev.rets.io:443';
   if (~document.domain.indexOf('stg.rets.ly')) domain = 'stg.rets.io:443';
   return domain;
+}
+
+function getOrigin () {
+  return document.location.protocol
+    + '//'
+    + document.domain
+    + (80 == document.location.port ? '' : (':' + document.location.port));
 }
 
 /**

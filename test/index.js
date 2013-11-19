@@ -5,6 +5,8 @@
 var Retsly = require('retsly-js-sdk');
 var assert = require('assert');
 
+// log debugs
+Retsly.debug = true;
 
 /**
  * Core API
