@@ -8,7 +8,7 @@ var ajax = require('ajax');
 var each = require('each');
 
 var PROTOCOL = 'https://';
-var DOMAIN = 'rets.ly';
+var DOMAIN = getDomain();
 
 /**
  * Core SDK
@@ -27,16 +27,25 @@ function Retsly (client_id, options) {
   this.client_id = client_id;
   this.token = null;
   this.options = extend({urlBase: '/api/v1'}, options);
-  this.host = (document.domain.indexOf('dev.rets.ly') > -1) ? 'dev.rets.io:443' : 'rets.io:443';
-  this.io = io.connect(PROTOCOL+this.host+'/', {'sync disconnect on unload':false});
-
-  // debug mode
-  Retsly.debug = this.options.debug || false;
+  this.host = DOMAIN;
+  this.io = io.connect(PROTOCOL+DOMAIN+'/', {'sync disconnect on unload':false});
 
   this.__init_stack = [];
   this.init();
   _this = this;
 }
+
+/**
+ * debug messages print if true
+ */
+Retsly.debug = false;
+
+/**
+ * Get complete URL for the given resource
+ */
+Retsly.prototype.getURL = function (url) {
+  return PROTOCOL + DOMAIN + this.options.urlBase + '/' + url;
+};
 
 Retsly.prototype.init = function() {
   var self = this;
@@ -46,7 +55,7 @@ Retsly.prototype.init = function() {
     type: 'POST',
     xhrFields: { withCredentials: true },
     data: { origin: document.location.protocol+'//'+document.domain, action: 'set' },
-    url: PROTOCOL+self.host+'/api/v1/session?origin='+document.domain,
+    url: this.getURL('session?origin='+document.domain),
     success: function(sid) {
       self.io.emit('authorize', { sid: sid }, function(data) {
         if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
@@ -65,7 +74,7 @@ Retsly.prototype.logout = function(cb) {
     type: 'POST',
     xhrFields: { withCredentials: true },
     data: { origin: document.location.protocol+'//'+document.domain, action: 'del' },
-    url: PROTOCOL+this.host+'/api/v1/session',
+    url: this.getURL('session'),
     error: function (error) { throw new Error(error); },
     success: success
   });
@@ -90,15 +99,15 @@ Retsly.prototype.get = function(url, query, cb) {
 };
 
 Retsly.prototype.post = function(url, body, cb) {
-  return this.request('post', url, options, cb);
+  return this.request('post', url, body, cb);
 };
 
 Retsly.prototype.put = function(url, body, cb) {
-  return this.request('put', url, options, cb);
+  return this.request('put', url, body, cb);
 };
 
 Retsly.prototype.del = function(url, body, cb) {
-  return this.request('delete', options, cb);
+  return this.request('delete', url, body, cb);
 };
 
 Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
@@ -130,7 +139,14 @@ Retsly.prototype.request = function(method, url, query, cb) {
   return this;
 };
 
-function getCookie (name,c,C,i){
+
+
+
+
+/**
+ * Cookie utils
+ */
+function getCookie (name,c,C,i) {
   c = document.cookie.split('; ');
   var cookies = {};
   for(i=c.length-1; i>=0; i--){
@@ -151,7 +167,17 @@ function setCookie (name, value, days) {
 }
 
 /**
- * Log only if debug mode
+ * Returns API domain for document.domain
+ */
+function getDomain () {
+  var domain = 'rets.io:443';
+  if (~document.domain.indexOf('dev.rets.ly')) domain = 'dev.rets.io:443';
+  if (~document.domain.indexOf('stg.rets.ly')) domain = 'stg.rets.io:443';
+  return domain;
+}
+
+/**
+ * Logs only if debug mode
  */
 function debug () {
   if (Retsly.debug) console.log.apply(console, arguments);

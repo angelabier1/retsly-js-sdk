@@ -6,8 +6,8 @@
   "dependencies": {
     "niclupien/socket.io-client": "*",
     "ForbesLindesay/ajax": "*",
-    "component/each": "*",
-    "segmentio/extend": "*"
+    "segmentio/extend": "*",
+    "component/each": "*"
   },
   "development": {
     "timoxley/assert": "*",
