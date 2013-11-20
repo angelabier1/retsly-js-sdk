@@ -73,3 +73,16 @@ test('calls back with a response', function (done) {
     done();
   }
 });
+
+suite('Retsly#logout()');
+
+test('destroys session', function (done) {
+  var r = new Retsly('test').ready(ready);
+  function ready () {
+    r.logout(function () {
+      // TODO how to demonstrate this
+      assert(true);
+      done();
+    });
+  }
+});

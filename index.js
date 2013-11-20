@@ -55,6 +55,7 @@ Retsly.prototype.init = function() {
     type: 'POST',
     data: { origin: getOrigin(), action: 'set' },
     url: this.getURL('session'),
+    xhrFields: { withCredentials: true },
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
@@ -75,6 +76,9 @@ Retsly.prototype.logout = function(cb) {
   ajax({
     type: 'POST',
     xhrFields: { withCredentials: true },
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
     data: { origin: getOrigin(), action: 'del' },
     url: this.getURL('session'),
     error: function (error) { throw new Error(error); },
