@@ -1,17 +1,22 @@
 
-build: components index.js styles/style.css
+build: components index.js styles/style.css node_modules
 	@component build --dev
+	@cat node_modules/socket.io-client/dist/socket.io.js >> build/build.js
 
-standalone: components index.js styles/style.css
+standalone: components index.js styles/style.css node_modules
 	@component build -s Retsly -o dist -n retsly-js-sdk
+	@cat node_modules/socket.io-client/dist/socket.io.js >> dist/retsly-js-sdk.js
 
 components: component.json
 	@component install --dev
 
-test:
-	@mocha --ui qunit --reporter spec
+node_modules: package.json
+	@npm install --production
+
+test: build
+	@serve -p 3000
 
 clean:
-	rm -fr build components
+	rm -fr build components node_modules
 
 .PHONY: clean test

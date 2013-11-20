@@ -4,7 +4,6 @@
   "description": "Retsly JavaScript SDK",
   "version": "0.0.1",
   "dependencies": {
-    "niclupien/socket.io-client": "*",
     "ForbesLindesay/ajax": "*",
     "segmentio/extend": "*",
     "component/each": "*"

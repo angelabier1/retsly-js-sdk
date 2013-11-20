@@ -3,9 +3,9 @@
  * Dependencies
  */
 var extend = require('extend');
-var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
+var io = window.io;
 
 var PROTOCOL = 'https://';
 var DOMAIN = getDomain();
