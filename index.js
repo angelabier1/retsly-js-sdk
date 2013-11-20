@@ -53,9 +53,11 @@ Retsly.prototype.init = function() {
   // <!-- Make sure you ask @slajax before changing this
   ajax({
     type: 'POST',
-    xhrFields: { withCredentials: true },
     data: { origin: getOrigin(), action: 'set' },
     url: this.getURL('session'),
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
     success: function(sid) {
       self.io.emit('authorize', { sid: sid }, function(data) {
         if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
@@ -92,6 +94,7 @@ Retsly.prototype.getToken = function() {
 Retsly.prototype.ready = function(cb) {
   if (cb) this.__init_stack.push(cb);
   else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
+  return this;
 };
 
 Retsly.prototype.get = function(url, query, cb) {
@@ -138,9 +141,6 @@ Retsly.prototype.request = function(method, url, query, cb) {
   this.io.emit('api', options, cb);
   return this;
 };
-
-
-
 
 
 /**
