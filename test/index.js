@@ -83,7 +83,13 @@ test('is chainable', function () {
 
 suite('Retsly#logout()');
 
-test('destroys session', function (done) {
+test('is chainable', function () {
+  var r = new Retsly('test')
+    .logout(noop);
+  assert(r instanceof Retsly);
+});
+
+test('destroys session and calls cb', function (done) {
   var r = new Retsly('test').ready(ready);
   function ready () {
     r.logout(function () {

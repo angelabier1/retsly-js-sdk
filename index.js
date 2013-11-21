@@ -66,7 +66,7 @@ Retsly.prototype.init = function() {
 
 //TODO kyle: Make this restful. It's way too fucken late right now.
 Retsly.prototype.logout = function(cb) {
-  var success = cb || function() {};
+  cb = cb || function() {};
   ajax({
     type: 'POST',
     xhrFields: { withCredentials: true },
@@ -76,8 +76,9 @@ Retsly.prototype.logout = function(cb) {
     data: { origin: getOrigin(), action: 'del' },
     url: this.getURL('session'),
     error: function (error) { throw new Error(error); },
-    success: success
+    success: cb
   });
+  return this;
 };
 
 // Set an oauth token for extended privileges.
