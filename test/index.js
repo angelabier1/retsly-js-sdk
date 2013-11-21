@@ -4,6 +4,7 @@
  */
 var Retsly = require('retsly-js-sdk');
 var assert = require('assert');
+var noop = function () {};
 
 // log debugs
 Retsly.debug = true;
@@ -51,7 +52,6 @@ test('calls all functions passed', function (done) {
 });
 
 test('is chainable', function () {
-  var noop = function () {};
   var r = new Retsly('test')
     .ready(noop)
     .ready(noop);
@@ -72,6 +72,13 @@ test('calls back with a response', function (done) {
     assert(false === res.success);
     done();
   }
+});
+
+test('is chainable', function () {
+  var r = new Retsly('test')
+    .get('test', noop)
+    .post('test2', noop);
+  assert(r instanceof Retsly);
 });
 
 suite('Retsly#logout()');

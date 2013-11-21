@@ -10,29 +10,23 @@ var io = window.io;
 var PROTOCOL = 'https://';
 var DOMAIN = getDomain();
 
-/**
- * Core SDK
- */
 module.exports = Retsly;
 
 /**
- * Constructor with a internal scope reference to _this
- * _this is used for Backbone methods which aren't part of the prototype
+ * Core SDK
  */
-var _this;
 function Retsly (client_id, options) {
   if (!client_id)
     throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
 
-  this.client_id = client_id;
-  this.token = null;
-  this.options = extend({urlBase: '/api/v1'}, options);
   this.host = DOMAIN;
+  this.token = null;
+  this.client_id = client_id;
+  this.options = extend({urlBase: '/api/v1'}, options);
   this.io = io.connect(PROTOCOL+DOMAIN, {'sync disconnect on unload':false});
 
   this.__init_stack = [];
   this.init();
-  _this = this;
 }
 
 /**
@@ -89,6 +83,7 @@ Retsly.prototype.logout = function(cb) {
 // Set an oauth token for extended privileges.
 Retsly.prototype.setToken = function(token) {
   this.token = token;
+  return this;
 };
 
 Retsly.prototype.getToken = function() {
@@ -127,7 +122,8 @@ Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
     options.query.access_token = this.getToken();
 
   this.io.emit('subscribe', options, icb);
-  return this.io.on(method, scb);
+  this.io.on(method, scb);
+  return this;
 };
 
 Retsly.prototype.request = function(method, url, query, cb) {

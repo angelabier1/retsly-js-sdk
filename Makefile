@@ -1,9 +1,9 @@
 
-build: components index.js styles/style.css node_modules
+build: components index.js node_modules
 	@component build --dev
 	@cat node_modules/socket.io-client/dist/socket.io.js >> build/build.js
 
-standalone: components index.js styles/style.css node_modules
+standalone: components index.js node_modules
 	@component build -s Retsly -o dist -n retsly-js-sdk
 	@cat node_modules/socket.io-client/dist/socket.io.js >> dist/retsly-js-sdk.js
 
