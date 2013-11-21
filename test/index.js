@@ -6,8 +6,8 @@ var Retsly = require('retsly-js-sdk');
 var assert = require('assert');
 var noop = function () {};
 
-// log debugs
-Retsly.debug = true;
+// don't log debugs
+Retsly.debug = false;
 
 /**
  * Core API
@@ -87,7 +87,6 @@ test('destroys session', function (done) {
   var r = new Retsly('test').ready(ready);
   function ready () {
     r.logout(function () {
-      // TODO how to demonstrate this
       assert(true);
       done();
     });

@@ -10,7 +10,7 @@
   },
   "development": {
     "timoxley/assert": "*",
-    "visionmedia/mocha": "*"
+    "visionmedia/mocha": "1.14.0"
   },
   "license": "MIT",
   "main": "index.js",
