@@ -1,18 +1,13 @@
 
-build: components index.js node_modules
+build: components index.js
 	@component build --dev
-	@cat node_modules/socket.io-client/dist/socket.io.js >> build/build.js
 
-dist: component.json index.js node_modules
+dist: component.json index.js
 	@component install
 	@component build -s Retsly -o . -n retsly
-	@cat node_modules/socket.io-client/dist/socket.io.js >> retsly.js
 
 components: component.json
 	@component install --dev
-
-node_modules: package.json
-	@npm install --production
 
 test: build
 	@echo open http://localhost:3000/test/test.html
