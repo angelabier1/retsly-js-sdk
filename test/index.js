@@ -34,12 +34,46 @@ test('has a socket.io connection', function () {
   assert(r.io);
 });
 
+
+suite('Retsly.create()');
+
+test('throws if called without client_id & opts', function () {
+  assert.throws(function(){ Retsly.create(); });
+});
+
+test('setup is chainable', function () {
+  Retsly
+    .client('test')
+    .options({foo:true})
+    .create();
+});
+
+test('returns same instance each call', function () {
+  var r = Retsly.create();
+  var s = Retsly.create();
+
+  assert(r instanceof Retsly);
+  assert(s instanceof Retsly);
+  assert.equal(r, s);
+});
+
+test('pass new args to replace', function () {
+  var r = Retsly.create();
+  var s = Retsly.create('foo', {foo:false});
+  var t = Retsly.create();
+
+  assert.notEqual(r, s);
+  assert.equal(s, t);
+});
+
+
 suite('Retsly#getURL()');
 
 test('builds URLs from fragments', function () {
   var r = new Retsly('test');
   assert('https://rets.io:443/api/v1/test' == r.getURL('test'));
 });
+
 
 suite('Retsly#ready()');
 
@@ -57,6 +91,7 @@ test('is chainable', function () {
     .ready(noop);
   assert(r instanceof Retsly);
 });
+
 
 suite('Retsly#request()');
 
@@ -80,6 +115,7 @@ test('is chainable', function () {
     .post('test2', noop);
   assert(r instanceof Retsly);
 });
+
 
 suite('Retsly#logout()');
 

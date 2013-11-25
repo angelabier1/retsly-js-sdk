@@ -34,6 +34,33 @@ function Retsly (client_id, options) {
  */
 Retsly.debug = false;
 
+
+var _retsly, _client, _opts;
+
+/**
+ * Retsly singleton-ish
+ * @return {Retsly}
+ * @api public
+ */
+Retsly.create = function create (client, opts) {
+  var s = !arguments.length;
+  client = client || _client;
+  opts = opts || _opts;
+  if (!s && !client) throw new Error('call Retsly.create() with client id and options');
+  return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, opts));
+}
+
+Retsly.client = function (id) {
+  _client = id;
+  return Retsly;
+}
+
+Retsly.options = function (opts) {
+  _opts = opts;
+  return Retsly;
+}
+
+
 /**
  * Get complete URL for the given resource
  */
