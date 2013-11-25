@@ -208,7 +208,7 @@ function getOrigin () {
   return document.location.protocol
     + '//'
     + document.domain
-    + (80 == document.location.port ? '' : (':' + document.location.port));
+    + (document.location.port ? (':' + document.location.port) : '');
 }
 
 /**
