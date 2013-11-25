@@ -2,18 +2,18 @@
   "name": "retsly-js-sdk",
   "repo": "Retsly/retsly-js-sdk",
   "description": "Retsly JavaScript SDK",
-  "version": "0.0.1",
-  "keywords": [],
+  "version": "0.2.0",
   "dependencies": {
-
+    "retsly/socket.io-client": "0.9.16",
+    "ForbesLindesay/ajax": "*",
+    "segmentio/extend": "*",
+    "component/each": "*"
   },
-  "development": {},
+  "development": {
+    "timoxley/assert": "*",
+    "visionmedia/mocha": "1.14.0"
+  },
   "license": "MIT",
   "main": "index.js",
-  "scripts": [
-    "index.js"
-  ],
-  "styles": [
-    "styles/style.css"
-  ]
+  "scripts": ["index.js"]
 }

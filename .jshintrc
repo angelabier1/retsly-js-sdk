@@ -1,0 +1,18 @@
+{
+  "camelcase": false,
+  "forin": true,
+  "indent": 2,
+  "newcap": true,
+  "quotmark": true,
+  "undef": true,
+  "unused": true,
+  "asi": false,
+  "laxcomma": true,
+  "lastsemic": true,
+  "node": true,
+  "browser": true,
+  "globals": {
+    "suite":true,
+    "test":true
+  }
+}

@@ -1,14 +1,19 @@
 
-build: components index.js styles/style.css
+build: components index.js
 	@component build --dev
 
-standalone: components index.js styles/style.css
-	@component build -s Retsly -o dist -n retsly-js-sdk
+dist: component.json index.js
+	@component install
+	@component build -s Retsly -o . -n retsly
 
 components: component.json
 	@component install --dev
 
-clean:
-	rm -fr build components
+test: build
+	@echo open http://localhost:3000/test/test.html
+	@serve -p 3000
 
-.PHONY: clean
+clean:
+	@rm -fr build components node_modules
+
+.PHONY: clean test
