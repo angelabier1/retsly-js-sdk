@@ -908,8 +908,8 @@ function setCookie (name, value, days) {
  */
 function getDomain () {
   var domain = 'rets.io:443';
-  if (~document.domain.indexOf('dev.rets.ly')) domain = 'dev.rets.io:443';
-  if (~document.domain.indexOf('stg.rets.ly')) domain = 'stg.rets.io:443';
+  if (~document.domain.indexOf('dev.rets')) domain = 'dev.rets.io:443';
+  if (~document.domain.indexOf('stg.rets')) domain = 'stg.rets.io:443';
   return domain;
 }
 
