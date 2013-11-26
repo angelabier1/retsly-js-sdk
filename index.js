@@ -72,6 +72,7 @@ Retsly.prototype.init = function() {
   var self = this;
   debug('--> Loading Retsly SDK...');
   // <!-- Make sure you ask @slajax before changing this
+
   ajax({
     type: 'POST',
     data: { origin: getOrigin(), action: 'set' },
@@ -80,6 +81,7 @@ Retsly.prototype.init = function() {
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
+    error: function (xhr,err) {throw new Error(err)},
     success: function(sid) {
       self.io.emit('authorize', { sid: sid }, function(data) {
         if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
