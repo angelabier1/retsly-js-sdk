@@ -61,6 +61,13 @@ Include in your project:
 This will export the client SDK as an AMD or CommonJS module, 
 or `window.Retsly`.
 
+#### Use with Phonegap
+
+You'll need to add **rets.ly** and **rets.io** to your application's whitelist.
+See the [Whitelist Guide](http://docs.phonegap.com/en/3.1.0/guide_appdev_whitelist_index.md.html) 
+for instructions.
+
+
 ## Example
 
 ```js
