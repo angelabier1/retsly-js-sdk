@@ -34,7 +34,6 @@ function Retsly (client_id, options) {
  */
 Retsly.debug = false;
 
-
 var _retsly, _client, _opts;
 
 /**
@@ -50,29 +49,30 @@ Retsly.create = function create (client, opts) {
   return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, opts));
 }
 
+/**
+ * Set the Retsly Client ID
+ */
 Retsly.client = function (id) {
   _client = id;
   return Retsly;
 }
 
+/*
+ * Set Retsly Options
+ */
 Retsly.options = function (opts) {
   _opts = opts;
   return Retsly;
 }
 
-
 /**
- * Get complete URL for the given resource
+ * Initialze Retsly session
  */
-Retsly.prototype.getURL = function (url) {
-  return PROTOCOL + DOMAIN + this.options.urlBase + '/' + url;
-};
-
 Retsly.prototype.init = function() {
   var self = this;
   debug('--> Loading Retsly SDK...');
-  // <!-- Make sure you ask @slajax before changing this
 
+  // <!-- Make sure you ask @slajax before changing this
   ajax({
     type: 'POST',
     data: { origin: getOrigin(), action: 'set' },
@@ -110,16 +110,45 @@ Retsly.prototype.logout = function(cb) {
   return this;
 };
 
-// Set an oauth token for extended privileges.
+/**
+ * Set an oauth token for extended privileges on current session.
+ */
 Retsly.prototype.setToken = function(token) {
   this.token = token;
   return this;
 };
 
+/**
+ * Get the oauth token for current session.
+ */
 Retsly.prototype.getToken = function() {
   return this.token;
 };
 
+/**
+ * Get the Retsly Client ID
+ */
+Retsly.prototype.getClient = function() {
+  return this.client_id;
+}
+
+/**
+ * Get the Retsly API Host
+ */
+Retsly.prototype.getHost = function() {
+  return this.host;
+};
+
+/**
+ * Get complete URL for the given resource
+ */
+Retsly.prototype.getURL = function (url) {
+  return PROTOCOL + DOMAIN + this.options.urlBase + '/' + url;
+};
+
+/**
+ * Add an init function to the ready stack, or execute the stack
+ */
 Retsly.prototype.ready = function(cb) {
   if (cb) this.__init_stack.push(cb);
   else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
@@ -127,18 +156,22 @@ Retsly.prototype.ready = function(cb) {
 };
 
 Retsly.prototype.get = function(url, query, cb) {
+  debug('get', '-->', url, query);
   return this.request('get', url, query, cb);
 };
 
 Retsly.prototype.post = function(url, body, cb) {
+  debug('post', '-->', url, query);
   return this.request('post', url, body, cb);
 };
 
 Retsly.prototype.put = function(url, body, cb) {
+  debug('put', '-->', url, query);
   return this.request('put', url, body, cb);
 };
 
 Retsly.prototype.del = function(url, body, cb) {
+  debug('del', '-->', url, query);
   return this.request('delete', url, body, cb);
 };
 
@@ -168,7 +201,13 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.url = url;
   options.query.access_token = this.getToken();
   options.query.client_id = this.client_id;
-  this.io.emit('api', options, cb);
+  this.io.emit('api', options, function(res) {
+    delete query['client_id'];
+    delete query['access_token'];
+    debug(method, '<-- ', url, query);
+    debug(' |---- response: ', res);
+    if(typeof cb === 'function') cb(res);
+  });
   return this;
 };
 
