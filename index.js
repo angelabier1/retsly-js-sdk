@@ -215,7 +215,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
 /**
  * Cookie utils
  */
-function getCookie (name,c,C,i) {
+var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
   c = document.cookie.split('; ');
   var cookies = {};
   for(i=c.length-1; i>=0; i--){
@@ -225,7 +225,7 @@ function getCookie (name,c,C,i) {
   return cookies[name];
 }
 
-function setCookie (name, value, days) {
+var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
   var expires = '';
   if (days) {
     var date = new Date();
