@@ -8,6 +8,8 @@ var noop = function () {};
 
 // don't log debugs
 Retsly.debug = false;
+// TODO luke temp maybe
+Retsly.getDomain = function () { return 'http://stg.rets.io:4001' };
 
 /**
  * Core API
@@ -71,7 +73,7 @@ suite('Retsly#getURL()');
 
 test('builds URLs from fragments', function () {
   var r = new Retsly('test');
-  assert('https://rets.io:443/api/v1/test' == r.getURL('test'));
+  assert(Retsly.getDomain()+'/api/v1/test' == r.getURL('test'));
 });
 
 

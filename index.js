@@ -7,9 +7,6 @@ var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
 
-var PROTOCOL = 'https://';
-var DOMAIN = getDomain();
-
 module.exports = Retsly;
 
 /**
@@ -19,11 +16,13 @@ function Retsly (client_id, options) {
   if (!client_id)
     throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
 
-  this.host = DOMAIN;
+  var domain = Retsly.getDomain();
+
+  this.host = domain;
   this.token = null;
   this.client_id = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
-  this.io = io.connect(PROTOCOL+DOMAIN, {'sync disconnect on unload':false});
+  this.io = io.connect(domain);
 
   this.__init_stack = [];
   this.init();
@@ -143,7 +142,7 @@ Retsly.prototype.getHost = function() {
  * Get complete URL for the given resource
  */
 Retsly.prototype.getURL = function (url) {
-  return PROTOCOL + DOMAIN + this.options.urlBase + '/' + url;
+  return this.host + this.options.urlBase + '/' + url;
 };
 
 /**
@@ -191,10 +190,14 @@ Retsly.prototype.request = function(method, url, query, cb) {
     cb = query;
     query = {};
   }
+  query = query || {};
   debug('%s --> %s', method, url, query);
+
   var options = {};
+  options.query = {};
+  if ('get' == method) options.query = query;
+  else options.body = query;
   options.method = method;
-  options.query = query || {};
   options.url = url;
   options.query.access_token = this.getToken();
   options.query.client_id = this.client_id;
@@ -235,10 +238,10 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
 /**
  * Returns API domain for document.domain
  */
-function getDomain () {
-  var domain = 'rets.io:443';
-  if (~document.domain.indexOf('dev.rets')) domain = 'dev.rets.io:443';
-  if (~document.domain.indexOf('stg.rets')) domain = 'stg.rets.io:443';
+Retsly.getDomain = function () {
+  var domain = 'https://rets.io:443';
+  if (~document.domain.indexOf('dev.rets')) domain = 'https://dev.rets.io:443';
+  if (~document.domain.indexOf('stg.rets')) domain = 'https://stg.rets.io:443';
   return domain;
 }
 
