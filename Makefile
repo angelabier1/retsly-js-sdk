@@ -10,8 +10,7 @@ components: component.json
 	@component install --dev
 
 test: build
-	@echo open http://localhost:3000/test/test.html
-	@serve -p 3000
+	@mocha-phantomjs test/test.html
 
 clean:
 	@rm -fr build components node_modules
