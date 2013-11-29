@@ -156,22 +156,18 @@ Retsly.prototype.ready = function(cb) {
 };
 
 Retsly.prototype.get = function(url, query, cb) {
-  debug('get', '-->', url, query);
   return this.request('get', url, query, cb);
 };
 
 Retsly.prototype.post = function(url, body, cb) {
-  debug('post', '-->', url, query);
   return this.request('post', url, body, cb);
 };
 
 Retsly.prototype.put = function(url, body, cb) {
-  debug('put', '-->', url, query);
   return this.request('put', url, body, cb);
 };
 
 Retsly.prototype.del = function(url, body, cb) {
-  debug('del', '-->', url, query);
   return this.request('delete', url, body, cb);
 };
 
@@ -195,6 +191,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
     cb = query;
     query = {};
   }
+  debug('%s --> %s', method, url, query);
   var options = {};
   options.method = method;
   options.query = query || {};
