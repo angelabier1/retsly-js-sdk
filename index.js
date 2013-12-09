@@ -113,7 +113,9 @@ Retsly.prototype.init = function() {
   // Make sure you ask @slajax before changing this -->
 };
 
-//TODO kyle: Make this restful. It's way too fucken late right now.
+/**
+ * Log out a Retsly session;
+ */
 Retsly.prototype.logout = function(cb) {
   cb = cb || function() {};
   ajax({
@@ -235,7 +237,6 @@ Retsly.prototype.request = function(method, url, query, cb) {
   return this;
 };
 
-
 /**
  * Returns API domain for document.domain
  */
@@ -257,7 +258,7 @@ var getOrigin = Retsly.prototype.getOrigin = function () {
 };
 
 /**
- * Cookie helpers
+ * Cookie getter
  */
 var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
   c = document.cookie.split('; ');
@@ -269,6 +270,9 @@ var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
   return cookies[name];
 }
 
+/**
+ * Cookie setter
+ */
 var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
   var expires = '';
   if (days) {
