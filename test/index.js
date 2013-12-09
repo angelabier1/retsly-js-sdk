@@ -73,7 +73,7 @@ suite('Retsly#getURL()');
 
 test('builds URLs from fragments', function () {
   var r = new Retsly('test');
-  assert(Retsly.getDomain()+'/api/v1/test' == r.getURL('test'));
+  assert(r.getDomain()+'/api/v1/test' == r.getURL('test'));
 });
 
 
@@ -84,7 +84,8 @@ test('calls all functions passed', function (done) {
   var fn = function () { i++; if (2==i) done() };
   var r = new Retsly('test');
   r.ready(fn)
-   .ready(fn);
+   .ready(fn)
+   .ready();
 });
 
 test('is chainable', function () {
@@ -94,22 +95,24 @@ test('is chainable', function () {
   assert(r instanceof Retsly);
 });
 
-
-suite('Retsly#request()');
-
-test('calls back with a response', function (done) {
-  var r = new Retsly('test').ready(ready);
-
-  function ready () {
-    r.request('get', '/api/v1/listings/sandicor.json', cb);
-  }
-
-  function cb (res) {
-    assert(401 == res.status);
-    assert(false === res.success);
-    done();
-  }
-});
+/*
+ *
+ *suite('Retsly#request()');
+ *
+ *test('calls back with a response', function (done) {
+ *  var r = new Retsly('test').ready(ready);
+ *
+ *  function ready () {
+ *    r.request('get', '/api/v1/listings/sandicor.json', cb);
+ *  }
+ *
+ *  function cb (res) {
+ *    assert(401 == res.status);
+ *    assert(false === res.success);
+ *    done();
+ *  }
+ *});
+ */
 
 test('is chainable', function () {
   var r = new Retsly('test')
@@ -127,12 +130,14 @@ test('is chainable', function () {
   assert(r instanceof Retsly);
 });
 
-test('destroys session and calls cb', function (done) {
-  var r = new Retsly('test').ready(ready);
-  function ready () {
-    r.logout(function () {
-      assert(true);
-      done();
-    });
-  }
-});
+/*
+ *test('destroys session and calls cb', function (done) {
+ *  var r = new Retsly('test').ready(ready);
+ *  function ready () {
+ *    r.logout(function () {
+ *      assert(true);
+ *      done();
+ *    });
+ *  }
+ *});
+ */

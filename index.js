@@ -9,6 +9,8 @@ var each = require('each');
 
 module.exports = Retsly;
 
+var _retsly, _client, _opts;
+
 /**
  * Core SDK
  */
@@ -25,6 +27,7 @@ function Retsly (client_id, options) {
   this.io = io.connect(domain);
 
   this.__init_stack = [];
+  _retsly = this;
   this.init();
 }
 
@@ -32,8 +35,6 @@ function Retsly (client_id, options) {
  * debug messages print if true
  */
 Retsly.debug = false;
-
-var _retsly, _client, _opts;
 
 /**
  * Retsly singleton-ish
@@ -74,7 +75,10 @@ Retsly.prototype.init = function() {
   // <!-- Make sure you ask @slajax before changing this
   // If this breaks again, you will be sorry.
 
+  if( document.getElementById('retsly-css-sdk') ) return;
+
   var css = document.createElement('link');
+    css.id = 'retsly-css-sdk';
     css.media = 'all';
     css.rel = 'stylesheet';
     css.href = getDomain()+'/css/sdk'
@@ -158,7 +162,7 @@ Retsly.prototype.getHost = function() {
 /**
  * Get complete URL for the given resource
  */
-Retsly.prototype.getURL = function (url) {
+Retsly.getURL = Retsly.prototype.getURL = function (url) {
   return this.host + this.options.urlBase + '/' + url;
 };
 
