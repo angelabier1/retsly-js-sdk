@@ -36,18 +36,22 @@ test('has a socket.io connection', function () {
   assert(r.io);
 });
 
+Retsly = require('retsly-js-sdk');
 
 suite('Retsly.create()');
-
-test('throws if called without client_id & opts', function () {
-  assert.throws(function(){ Retsly.create(); });
-});
 
 test('setup is chainable', function () {
   Retsly
     .client('test')
     .options({foo:true})
     .create();
+});
+
+test('returns original instance', function () {
+  var r1 = new Retsly('original');
+  var r2 = Retsly.create();
+  assert(r2.getClient() === 'original');
+  assert(r2 === r1);
 });
 
 test('returns same instance each call', function () {
