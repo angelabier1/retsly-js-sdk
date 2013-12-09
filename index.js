@@ -18,7 +18,7 @@ function Retsly (client_id, options) {
   if (!client_id)
     throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
 
-  var domain = this.getDomain();
+  var domain = Retsly.getDomain();
 
   this.host = domain;
   this.token = null;
@@ -27,7 +27,6 @@ function Retsly (client_id, options) {
   this.io = io.connect(domain);
 
   this.__init_stack = [];
-  _retsly = this;
   this.init();
 }
 
@@ -75,18 +74,20 @@ Retsly.prototype.init = function() {
   // <!-- Make sure you ask @slajax before changing this
   // If this breaks again, you will be sorry.
 
-  if( document.getElementById('retsly-css-sdk') ) return;
+  // TODO luke: nice day for racing
+  if (document.getElementById('retsly-css-sdk'))
+    return setTimeout(function () {self.ready()}, 0);
 
   var css = document.createElement('link');
-    css.id = 'retsly-css-sdk';
-    css.media = 'all';
-    css.rel = 'stylesheet';
-    css.href = getDomain()+'/css/sdk'
+  css.id = 'retsly-css-sdk';
+  css.media = 'all';
+  css.rel = 'stylesheet';
+  css.href = Retsly.getDomain()+'/css/sdk';
 
   var cssLoaded = function() {
     ajax({
       type: 'POST',
-      data: { origin: getOrigin(), action: 'set' },
+      data: { origin: Retsly.getOrigin(), action: 'set' },
       url: self.getURL('session'),
       xhrFields: { withCredentials: true },
       beforeSend: function(xhr) {
@@ -124,7 +125,7 @@ Retsly.prototype.logout = function(cb) {
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
-    data: { origin: getOrigin(), action: 'del' },
+    data: { origin: Retsly.getOrigin(), action: 'del' },
     url: this.getURL('session'),
     error: function (error) { throw new Error(error); },
     success: cb
@@ -240,7 +241,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
 /**
  * Returns API domain for document.domain
  */
-var getDomain = Retsly.prototype.getDomain = function () {
+Retsly.prototype.getDomain = Retsly.getDomain = function () {
   var domain = 'https://rets.io:443';
   if (~document.domain.indexOf('dev.rets')) domain = 'https://dev.rets.io:443';
   if (~document.domain.indexOf('stg.rets')) domain = 'https://stg.rets.io:443';
@@ -250,7 +251,7 @@ var getDomain = Retsly.prototype.getDomain = function () {
 /**
  * Returns the origin for XHR CORS requests
  */
-var getOrigin = Retsly.prototype.getOrigin = function () {
+Retsly.getOrigin = function () {
   return document.location.protocol
     + '//'
     + document.domain
