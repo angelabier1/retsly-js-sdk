@@ -285,27 +285,3 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
 function debug () {
   if (Retsly.debug) console.log.apply(console, arguments);
 }
-
-function cssReady(link, fn) {
-
-  var d = document,
-  t = d.createStyleSheet,
-  r = t ? 'rules' : 'cssRules',
-  s = t ? 'styleSheet' : 'sheet',
-  l = d.getElementsByTagName('link');
-
-  // passed link or last link node
-  link || (link = l[l.length - 1]);
-
-  function check() {
-    try {
-      return link && link[s] && link[s][r] && link[s][r][0];
-    } catch(e) {
-      return false;
-    }
-  }
-
-  (function poll() {
-    check() && setTimeout(fn, 0) || setTimeout(poll, 100);
-  })();
-};
