@@ -16,7 +16,7 @@ function Retsly (client_id, options) {
   if (!client_id)
     throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
 
-  var domain = Retsly.getDomain();
+  var domain = this.getDomain();
 
   this.host = domain;
   this.token = null;
@@ -72,23 +72,40 @@ Retsly.prototype.init = function() {
   debug('--> Loading Retsly SDK...');
 
   // <!-- Make sure you ask @slajax before changing this
-  ajax({
-    type: 'POST',
-    data: { origin: getOrigin(), action: 'set' },
-    url: this.getURL('session'),
-    xhrFields: { withCredentials: true },
-    beforeSend: function(xhr) {
-      xhr.withCredentials = true;
-    },
-    error: function (xhr,err) {throw new Error(err)},
-    success: function(sid) {
-      self.io.emit('authorize', { sid: sid }, function(data) {
-        if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
-        debug('<-- Retsly SDK Loaded!');
-        self.ready();
-      });
-    }
-  });
+  // If this breaks again, you will be sorry.
+
+  var css = document.createElement('link');
+    css.media = 'all';
+    css.rel = 'stylesheet';
+    css.href = getDomain()+'/css/sdk'
+
+  var cssLoaded = function() {
+    ajax({
+      type: 'POST',
+      data: { origin: getOrigin(), action: 'set' },
+      url: self.getURL('session'),
+      xhrFields: { withCredentials: true },
+      beforeSend: function(xhr) {
+        xhr.withCredentials = true;
+      },
+      error: function (xhr,err) {throw new Error(err)},
+      success: function(sid) {
+        self.io.emit('authorize', { sid: sid }, function(data) {
+          if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
+          debug('<-- Retsly SDK Loaded!');
+          self.ready();
+        });
+      }
+    });
+  };
+
+  css.onload = cssLoaded;
+  css.onreadystatechange = function() {
+    if(this.readState === 'loaded' || this.readState === 'complete') cssLoaded();
+  };
+  document.getElementsByTagName('head')[0].appendChild(css);
+
+  // If this breaks again, you will be sorry.
   // Make sure you ask @slajax before changing this -->
 };
 
@@ -154,6 +171,9 @@ Retsly.prototype.ready = function(cb) {
   return this;
 };
 
+/**
+ * API Methods
+ */
 Retsly.prototype.get = function(url, query, cb) {
   return this.request('get', url, query, cb);
 };
@@ -213,7 +233,27 @@ Retsly.prototype.request = function(method, url, query, cb) {
 
 
 /**
- * Cookie utils
+ * Returns API domain for document.domain
+ */
+var getDomain = Retsly.prototype.getDomain = function () {
+  var domain = 'https://rets.io:443';
+  if (~document.domain.indexOf('dev.rets')) domain = 'https://dev.rets.io:443';
+  if (~document.domain.indexOf('stg.rets')) domain = 'https://stg.rets.io:443';
+  return domain;
+};
+
+/**
+ * Returns the origin for XHR CORS requests
+ */
+var getOrigin = Retsly.prototype.getOrigin = function () {
+  return document.location.protocol
+    + '//'
+    + document.domain
+    + (document.location.port ? (':' + document.location.port) : '');
+};
+
+/**
+ * Cookie helpers
  */
 var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
   c = document.cookie.split('; ');
@@ -236,25 +276,32 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
 }
 
 /**
- * Returns API domain for document.domain
- */
-Retsly.getDomain = function () {
-  var domain = 'https://rets.io:443';
-  if (~document.domain.indexOf('dev.rets')) domain = 'https://dev.rets.io:443';
-  if (~document.domain.indexOf('stg.rets')) domain = 'https://stg.rets.io:443';
-  return domain;
-}
-
-function getOrigin () {
-  return document.location.protocol
-    + '//'
-    + document.domain
-    + (document.location.port ? (':' + document.location.port) : '');
-}
-
-/**
  * Logs only if debug mode
  */
 function debug () {
   if (Retsly.debug) console.log.apply(console, arguments);
 }
+
+function cssReady(link, fn) {
+
+  var d = document,
+  t = d.createStyleSheet,
+  r = t ? 'rules' : 'cssRules',
+  s = t ? 'styleSheet' : 'sheet',
+  l = d.getElementsByTagName('link');
+
+  // passed link or last link node
+  link || (link = l[l.length - 1]);
+
+  function check() {
+    try {
+      return link && link[s] && link[s][r] && link[s][r][0];
+    } catch(e) {
+      return false;
+    }
+  }
+
+  (function poll() {
+    check() && setTimeout(fn, 0) || setTimeout(poll, 100);
+  })();
+};
