@@ -225,8 +225,11 @@ Retsly.prototype.request = function(method, url, query, cb) {
   else options.body = query;
   options.method = method;
   options.url = url;
-  options.query.access_token = this.getToken();
+
+  var token = this.getToken();
+  if(token) options.query.access_token = token;
   options.query.client_id = this.client_id;
+
   this.io.emit('api', options, function(res) {
     delete query['client_id'];
     delete query['access_token'];
