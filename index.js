@@ -162,7 +162,7 @@ Retsly.prototype.getHost = function() {
 /**
  * Get complete URL for the given resource
  */
-Retsly.getURL = Retsly.prototype.getURL = function (url) {
+Retsly.prototype.getURL = function (url) {
   return this.host + this.options.urlBase + '/' + url;
 };
 
