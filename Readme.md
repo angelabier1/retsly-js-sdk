@@ -13,7 +13,7 @@
 
 Retsly core SDK. Useful for clientside integration with [Retsly](http://rets.ly).
 
-This component provides low-level access to the socket API. For a higher-level 
+This component provides low-level access to the socket API. For a higher-level
 component, use [retsly/retsly-js-backbone](https://github.com/retsly/retsly-js-backbone).
 
 > After you get an API Key you can check out the [API Docs](http://rets.ly/docs).
@@ -58,13 +58,13 @@ Include in your project:
 <script src='/path/to/retsly.js'></script>
 ```
 
-This will export the client SDK as an AMD or CommonJS module, 
+This will export the client SDK as an AMD or CommonJS module,
 or `window.Retsly`.
 
 #### Use with Phonegap
 
 You'll need to add **rets.ly** and **rets.io** to your application's whitelist.
-See the [Whitelist Guide](http://docs.phonegap.com/en/3.1.0/guide_appdev_whitelist_index.md.html) 
+See the [Whitelist Guide](http://docs.phonegap.com/en/3.1.0/guide_appdev_whitelist_index.md.html)
 for instructions.
 
 
@@ -83,24 +83,24 @@ retsly.ready(function(){
 
 ## Building Retsly Components
 
-Retsly components should be built using 
-[component](https://github.com/component/component). Components should 
-follow the naming convention `retsly`-`lang_prefix`-`name`. Add new 
-components to the [wiki](https://github.com/Retsly/retsly-js-sdk/wiki/Component-List). 
-This will allow anyone to install these components and include them into 
+Retsly components should be built using
+[component](https://github.com/component/component). Components should
+follow the naming convention `retsly`-`lang_prefix`-`name`. Add new
+components to the [wiki](https://github.com/Retsly/retsly-js-sdk/wiki/Component-List).
+This will allow anyone to install these components and include them into
 their source using require:
 
 ```js
 // Example of how a featured listing component might look
 var Featured = require('retsly-js-featured');
-var feature = new Featured('#featured', { mls_id: mls.id, listings: listings, limit: 10 });
+var feature = new Featured('#featured', { vendorID: mls.id, listings: listings, limit: 10 });
 feature.on('click', doSomething);
 ```
 
-When at all possible abstract specific component behavior into it's own 
-component. If you find your feature includes multiple components, try to 
+When at all possible abstract specific component behavior into it's own
+component. If you find your feature includes multiple components, try to
 separate the logic into individual componets, then require them in your
-`component.json` file. This granularity will promote the reuse of generic 
+`component.json` file. This granularity will promote the reuse of generic
 functionality within the Retsly community.
 
 ## License
@@ -109,20 +109,20 @@ functionality within the Retsly community.
 
 Copyright (c) 2013 Kyle Campbell <mail@slajax.com>
 
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the 'Software'), 
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the 'Software'),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included 
+The above copyright notice and this permission notice shall be included
 in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
