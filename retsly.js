@@ -200,760 +200,8 @@ require.relative = function(parent) {
 
   return localRequire;
 };
-require.register("component-type/index.js", function(exports, require, module){
-
-/**
- * toString ref.
- */
-
-var toString = Object.prototype.toString;
-
-/**
- * Return the type of `val`.
- *
- * @param {Mixed} val
- * @return {String}
- * @api public
- */
-
-module.exports = function(val){
-  switch (toString.call(val)) {
-    case '[object Function]': return 'function';
-    case '[object Date]': return 'date';
-    case '[object RegExp]': return 'regexp';
-    case '[object Arguments]': return 'arguments';
-    case '[object Array]': return 'array';
-    case '[object String]': return 'string';
-  }
-
-  if (val === null) return 'null';
-  if (val === undefined) return 'undefined';
-  if (val && val.nodeType === 1) return 'element';
-  if (val === Object(val)) return 'object';
-
-  return typeof val;
-};
-
-});
-require.register("ForbesLindesay-ajax/index.js", function(exports, require, module){
-var type
-try {
-  type = require('type-of')
-} catch (ex) {
-  //hide from browserify
-  var r = require
-  type = r('type')
-}
-
-var jsonpID = 0,
-    document = window.document,
-    key,
-    name,
-    rscript = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    scriptTypeRE = /^(?:text|application)\/javascript/i,
-    xmlTypeRE = /^(?:text|application)\/xml/i,
-    jsonType = 'application/json',
-    htmlType = 'text/html',
-    blankRE = /^\s*$/
-
-var ajax = module.exports = function(options){
-  var settings = extend({}, options || {})
-  for (key in ajax.settings) if (settings[key] === undefined) settings[key] = ajax.settings[key]
-
-  ajaxStart(settings)
-
-  if (!settings.crossDomain) settings.crossDomain = /^([\w-]+:)?\/\/([^\/]+)/.test(settings.url) &&
-    RegExp.$2 != window.location.host
-
-  var dataType = settings.dataType, hasPlaceholder = /=\?/.test(settings.url)
-  if (dataType == 'jsonp' || hasPlaceholder) {
-    if (!hasPlaceholder) settings.url = appendQuery(settings.url, 'callback=?')
-    return ajax.JSONP(settings)
-  }
-
-  if (!settings.url) settings.url = window.location.toString()
-  serializeData(settings)
-
-  var mime = settings.accepts[dataType],
-      baseHeaders = { },
-      protocol = /^([\w-]+:)\/\//.test(settings.url) ? RegExp.$1 : window.location.protocol,
-      xhr = ajax.settings.xhr(), abortTimeout
-
-  if (!settings.crossDomain) baseHeaders['X-Requested-With'] = 'XMLHttpRequest'
-  if (mime) {
-    baseHeaders['Accept'] = mime
-    if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
-    xhr.overrideMimeType && xhr.overrideMimeType(mime)
-  }
-  if (settings.contentType || (settings.data && settings.type.toUpperCase() != 'GET'))
-    baseHeaders['Content-Type'] = (settings.contentType || 'application/x-www-form-urlencoded')
-  settings.headers = extend(baseHeaders, settings.headers || {})
-
-  xhr.onreadystatechange = function(){
-    if (xhr.readyState == 4) {
-      clearTimeout(abortTimeout)
-      var result, error = false
-      if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status == 0 && protocol == 'file:')) {
-        dataType = dataType || mimeToDataType(xhr.getResponseHeader('content-type'))
-        result = xhr.responseText
-
-        try {
-          if (dataType == 'script')    (1,eval)(result)
-          else if (dataType == 'xml')  result = xhr.responseXML
-          else if (dataType == 'json') result = blankRE.test(result) ? null : JSON.parse(result)
-        } catch (e) { error = e }
-
-        if (error) ajaxError(error, 'parsererror', xhr, settings)
-        else ajaxSuccess(result, xhr, settings)
-      } else {
-        ajaxError(null, 'error', xhr, settings)
-      }
-    }
-  }
-
-  var async = 'async' in settings ? settings.async : true
-  xhr.open(settings.type, settings.url, async)
-
-  for (name in settings.headers) xhr.setRequestHeader(name, settings.headers[name])
-
-  if (ajaxBeforeSend(xhr, settings) === false) {
-    xhr.abort()
-    return false
-  }
-
-  if (settings.timeout > 0) abortTimeout = setTimeout(function(){
-      xhr.onreadystatechange = empty
-      xhr.abort()
-      ajaxError(null, 'timeout', xhr, settings)
-    }, settings.timeout)
-
-  // avoid sending empty string (#319)
-  xhr.send(settings.data ? settings.data : null)
-  return xhr
-}
-
-
-// trigger a custom event and return false if it was cancelled
-function triggerAndReturn(context, eventName, data) {
-  //todo: Fire off some events
-  //var event = $.Event(eventName)
-  //$(context).trigger(event, data)
-  return true;//!event.defaultPrevented
-}
-
-// trigger an Ajax "global" event
-function triggerGlobal(settings, context, eventName, data) {
-  if (settings.global) return triggerAndReturn(context || document, eventName, data)
-}
-
-// Number of active Ajax requests
-ajax.active = 0
-
-function ajaxStart(settings) {
-  if (settings.global && ajax.active++ === 0) triggerGlobal(settings, null, 'ajaxStart')
-}
-function ajaxStop(settings) {
-  if (settings.global && !(--ajax.active)) triggerGlobal(settings, null, 'ajaxStop')
-}
-
-// triggers an extra global event "ajaxBeforeSend" that's like "ajaxSend" but cancelable
-function ajaxBeforeSend(xhr, settings) {
-  var context = settings.context
-  if (settings.beforeSend.call(context, xhr, settings) === false ||
-      triggerGlobal(settings, context, 'ajaxBeforeSend', [xhr, settings]) === false)
-    return false
-
-  triggerGlobal(settings, context, 'ajaxSend', [xhr, settings])
-}
-function ajaxSuccess(data, xhr, settings) {
-  var context = settings.context, status = 'success'
-  settings.success.call(context, data, status, xhr)
-  triggerGlobal(settings, context, 'ajaxSuccess', [xhr, settings, data])
-  ajaxComplete(status, xhr, settings)
-}
-// type: "timeout", "error", "abort", "parsererror"
-function ajaxError(error, type, xhr, settings) {
-  var context = settings.context
-  settings.error.call(context, xhr, type, error)
-  triggerGlobal(settings, context, 'ajaxError', [xhr, settings, error])
-  ajaxComplete(type, xhr, settings)
-}
-// status: "success", "notmodified", "error", "timeout", "abort", "parsererror"
-function ajaxComplete(status, xhr, settings) {
-  var context = settings.context
-  settings.complete.call(context, xhr, status)
-  triggerGlobal(settings, context, 'ajaxComplete', [xhr, settings])
-  ajaxStop(settings)
-}
-
-// Empty function, used as default callback
-function empty() {}
-
-ajax.JSONP = function(options){
-  if (!('type' in options)) return ajax(options)
-
-  var callbackName = 'jsonp' + (++jsonpID),
-    script = document.createElement('script'),
-    abort = function(){
-      //todo: remove script
-      //$(script).remove()
-      if (callbackName in window) window[callbackName] = empty
-      ajaxComplete('abort', xhr, options)
-    },
-    xhr = { abort: abort }, abortTimeout,
-    head = document.getElementsByTagName("head")[0]
-      || document.documentElement
-
-  if (options.error) script.onerror = function() {
-    xhr.abort()
-    options.error()
-  }
-
-  window[callbackName] = function(data){
-    clearTimeout(abortTimeout)
-      //todo: remove script
-      //$(script).remove()
-    delete window[callbackName]
-    ajaxSuccess(data, xhr, options)
-  }
-
-  serializeData(options)
-  script.src = options.url.replace(/=\?/, '=' + callbackName)
-
-  // Use insertBefore instead of appendChild to circumvent an IE6 bug.
-  // This arises when a base node is used (see jQuery bugs #2709 and #4378).
-  head.insertBefore(script, head.firstChild);
-
-  if (options.timeout > 0) abortTimeout = setTimeout(function(){
-      xhr.abort()
-      ajaxComplete('timeout', xhr, options)
-    }, options.timeout)
-
-  return xhr
-}
-
-ajax.settings = {
-  // Default type of request
-  type: 'GET',
-  // Callback that is executed before request
-  beforeSend: empty,
-  // Callback that is executed if the request succeeds
-  success: empty,
-  // Callback that is executed the the server drops error
-  error: empty,
-  // Callback that is executed on request complete (both: error and success)
-  complete: empty,
-  // The context for the callbacks
-  context: null,
-  // Whether to trigger "global" Ajax events
-  global: true,
-  // Transport
-  xhr: function () {
-    return new window.XMLHttpRequest()
-  },
-  // MIME types mapping
-  accepts: {
-    script: 'text/javascript, application/javascript',
-    json:   jsonType,
-    xml:    'application/xml, text/xml',
-    html:   htmlType,
-    text:   'text/plain'
-  },
-  // Whether the request is to another domain
-  crossDomain: false,
-  // Default timeout
-  timeout: 0
-}
-
-function mimeToDataType(mime) {
-  return mime && ( mime == htmlType ? 'html' :
-    mime == jsonType ? 'json' :
-    scriptTypeRE.test(mime) ? 'script' :
-    xmlTypeRE.test(mime) && 'xml' ) || 'text'
-}
-
-function appendQuery(url, query) {
-  return (url + '&' + query).replace(/[&?]{1,2}/, '?')
-}
-
-// serialize payload and append it to the URL for GET requests
-function serializeData(options) {
-  if (type(options.data) === 'object') options.data = param(options.data)
-  if (options.data && (!options.type || options.type.toUpperCase() == 'GET'))
-    options.url = appendQuery(options.url, options.data)
-}
-
-ajax.get = function(url, success){ return ajax({ url: url, success: success }) }
-
-ajax.post = function(url, data, success, dataType){
-  if (type(data) === 'function') dataType = dataType || success, success = data, data = null
-  return ajax({ type: 'POST', url: url, data: data, success: success, dataType: dataType })
-}
-
-ajax.getJSON = function(url, success){
-  return ajax({ url: url, success: success, dataType: 'json' })
-}
-
-var escape = encodeURIComponent
-
-function serialize(params, obj, traditional, scope){
-  var array = type(obj) === 'array';
-  for (var key in obj) {
-    var value = obj[key];
-
-    if (scope) key = traditional ? scope : scope + '[' + (array ? '' : key) + ']'
-    // handle data in serializeArray() format
-    if (!scope && array) params.add(value.name, value.value)
-    // recurse into nested objects
-    else if (traditional ? (type(value) === 'array') : (type(value) === 'object'))
-      serialize(params, value, traditional, key)
-    else params.add(key, value)
-  }
-}
-
-function param(obj, traditional){
-  var params = []
-  params.add = function(k, v){ this.push(escape(k) + '=' + escape(v)) }
-  serialize(params, obj, traditional)
-  return params.join('&').replace('%20', '+')
-}
-
-function extend(target) {
-  var slice = Array.prototype.slice;
-  slice.call(arguments, 1).forEach(function(source) {
-    for (key in source)
-      if (source[key] !== undefined)
-        target[key] = source[key]
-  })
-  return target
-}
-});
-require.register("segmentio-extend/index.js", function(exports, require, module){
-
-module.exports = function extend (object) {
-    // Takes an unlimited number of extenders.
-    var args = Array.prototype.slice.call(arguments, 1);
-
-    // For each extender, copy their properties on our object.
-    for (var i = 0, source; source = args[i]; i++) {
-        if (!source) continue;
-        for (var property in source) {
-            object[property] = source[property];
-        }
-    }
-
-    return object;
-};
-});
-require.register("component-to-function/index.js", function(exports, require, module){
-
-/**
- * Expose `toFunction()`.
- */
-
-module.exports = toFunction;
-
-/**
- * Convert `obj` to a `Function`.
- *
- * @param {Mixed} obj
- * @return {Function}
- * @api private
- */
-
-function toFunction(obj) {
-  switch ({}.toString.call(obj)) {
-    case '[object Object]':
-      return objectToFunction(obj);
-    case '[object Function]':
-      return obj;
-    case '[object String]':
-      return stringToFunction(obj);
-    case '[object RegExp]':
-      return regexpToFunction(obj);
-    default:
-      return defaultToFunction(obj);
-  }
-}
-
-/**
- * Default to strict equality.
- *
- * @param {Mixed} val
- * @return {Function}
- * @api private
- */
-
-function defaultToFunction(val) {
-  return function(obj){
-    return val === obj;
-  }
-}
-
-/**
- * Convert `re` to a function.
- *
- * @param {RegExp} re
- * @return {Function}
- * @api private
- */
-
-function regexpToFunction(re) {
-  return function(obj){
-    return re.test(obj);
-  }
-}
-
-/**
- * Convert property `str` to a function.
- *
- * @param {String} str
- * @return {Function}
- * @api private
- */
-
-function stringToFunction(str) {
-  // immediate such as "> 20"
-  if (/^ *\W+/.test(str)) return new Function('_', 'return _ ' + str);
-
-  // properties such as "name.first" or "age > 18"
-  return new Function('_', 'return _.' + str);
-}
-
-/**
- * Convert `object` to a function.
- *
- * @param {Object} object
- * @return {Function}
- * @api private
- */
-
-function objectToFunction(obj) {
-  var match = {}
-  for (var key in obj) {
-    match[key] = typeof obj[key] === 'string'
-      ? defaultToFunction(obj[key])
-      : toFunction(obj[key])
-  }
-  return function(val){
-    if (typeof val !== 'object') return false;
-    for (var key in match) {
-      if (!(key in val)) return false;
-      if (!match[key](val[key])) return false;
-    }
-    return true;
-  }
-}
-
-});
-require.register("component-each/index.js", function(exports, require, module){
-
-/**
- * Module dependencies.
- */
-
-var toFunction = require('to-function');
-var type;
-
-try {
-  type = require('type-component');
-} catch (e) {
-  type = require('type');
-}
-
-/**
- * HOP reference.
- */
-
-var has = Object.prototype.hasOwnProperty;
-
-/**
- * Iterate the given `obj` and invoke `fn(val, i)`.
- *
- * @param {String|Array|Object} obj
- * @param {Function} fn
- * @api public
- */
-
-module.exports = function(obj, fn){
-  fn = toFunction(fn);
-  switch (type(obj)) {
-    case 'array':
-      return array(obj, fn);
-    case 'object':
-      if ('number' == typeof obj.length) return array(obj, fn);
-      return object(obj, fn);
-    case 'string':
-      return string(obj, fn);
-  }
-};
-
-/**
- * Iterate string chars.
- *
- * @param {String} obj
- * @param {Function} fn
- * @api private
- */
-
-function string(obj, fn) {
-  for (var i = 0; i < obj.length; ++i) {
-    fn(obj.charAt(i), i);
-  }
-}
-
-/**
- * Iterate object keys.
- *
- * @param {Object} obj
- * @param {Function} fn
- * @api private
- */
-
-function object(obj, fn) {
-  for (var key in obj) {
-    if (has.call(obj, key)) {
-      fn(key, obj[key]);
-    }
-  }
-}
-
-/**
- * Iterate array-ish.
- *
- * @param {Array|Object} obj
- * @param {Function} fn
- * @api private
- */
-
-function array(obj, fn) {
-  for (var i = 0; i < obj.length; ++i) {
-    fn(obj[i], i);
-  }
-}
-
-});
-require.register("retsly-js-sdk/index.js", function(exports, require, module){
-
-/**
- * Dependencies
- */
-var extend = require('extend');
-var ajax = require('ajax');
-var each = require('each');
-var io = window.io;
-
-var PROTOCOL = 'https://';
-var DOMAIN = getDomain();
-
-module.exports = Retsly;
-
-/**
- * Core SDK
- */
-function Retsly (client_id, options) {
-  if (!client_id)
-    throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
-
-  this.host = DOMAIN;
-  this.token = null;
-  this.client_id = client_id;
-  this.options = extend({urlBase: '/api/v1'}, options);
-  this.io = io.connect(PROTOCOL+DOMAIN, {'sync disconnect on unload':false});
-
-  this.__init_stack = [];
-  this.init();
-}
-
-/**
- * debug messages print if true
- */
-Retsly.debug = false;
-
-/**
- * Get complete URL for the given resource
- */
-Retsly.prototype.getURL = function (url) {
-  return PROTOCOL + DOMAIN + this.options.urlBase + '/' + url;
-};
-
-Retsly.prototype.init = function() {
-  var self = this;
-  debug('--> Loading Retsly SDK...');
-  // <!-- Make sure you ask @slajax before changing this
-  ajax({
-    type: 'POST',
-    data: { origin: getOrigin(), action: 'set' },
-    url: this.getURL('session'),
-    xhrFields: { withCredentials: true },
-    beforeSend: function(xhr) {
-      xhr.withCredentials = true;
-    },
-    success: function(sid) {
-      self.io.emit('authorize', { sid: sid }, function(data) {
-        if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
-        debug('<-- Retsly SDK Loaded!');
-        self.ready();
-      });
-    }
-  });
-  // Make sure you ask @slajax before changing this -->
-};
-
-//TODO kyle: Make this restful. It's way too fucken late right now.
-Retsly.prototype.logout = function(cb) {
-  cb = cb || function() {};
-  ajax({
-    type: 'POST',
-    xhrFields: { withCredentials: true },
-    beforeSend: function(xhr) {
-      xhr.withCredentials = true;
-    },
-    data: { origin: getOrigin(), action: 'del' },
-    url: this.getURL('session'),
-    error: function (error) { throw new Error(error); },
-    success: cb
-  });
-  return this;
-};
-
-// Set an oauth token for extended privileges.
-Retsly.prototype.setToken = function(token) {
-  this.token = token;
-  return this;
-};
-
-Retsly.prototype.getToken = function() {
-  return this.token;
-};
-
-Retsly.prototype.ready = function(cb) {
-  if (cb) this.__init_stack.push(cb);
-  else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
-  return this;
-};
-
-Retsly.prototype.get = function(url, query, cb) {
-  return this.request('get', url, query, cb);
-};
-
-Retsly.prototype.post = function(url, body, cb) {
-  return this.request('post', url, body, cb);
-};
-
-Retsly.prototype.put = function(url, body, cb) {
-  return this.request('put', url, body, cb);
-};
-
-Retsly.prototype.del = function(url, body, cb) {
-  return this.request('delete', url, body, cb);
-};
-
-Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
-  var options = {};
-  options.url = url;
-  options.query = query;
-  options.query.client_id = this.client_id;
-
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  this.io.emit('subscribe', options, icb);
-  this.io.on(method, scb);
-  return this;
-};
-
-Retsly.prototype.request = function(method, url, query, cb) {
-  // query is optional
-  if (undefined === cb && 'function' == typeof query) {
-    cb = query;
-    query = {};
-  }
-  var options = {};
-  options.method = method;
-  options.query = query || {};
-  options.url = url;
-  options.query.access_token = this.getToken();
-  options.query.client_id = this.client_id;
-  this.io.emit('api', options, cb);
-  return this;
-};
-
-
-/**
- * Cookie utils
- */
-function getCookie (name,c,C,i) {
-  c = document.cookie.split('; ');
-  var cookies = {};
-  for(i=c.length-1; i>=0; i--){
-    C = c[i].split('=');
-    cookies[C[0]] = C[1];
-  }
-  return cookies[name];
-}
-
-function setCookie (name, value, days) {
-  var expires = '';
-  if (days) {
-    var date = new Date();
-    date.setTime(date.getTime()+(days*24*60*60*1000));
-    expires = '; expires='+date.toGMTString();
-  }
-  document.cookie = name+'='+value+expires+'; path=/';
-}
-
-/**
- * Returns API domain for document.domain
- */
-function getDomain () {
-  var domain = 'rets.io:443';
-  if (~document.domain.indexOf('dev.rets')) domain = 'dev.rets.io:443';
-  if (~document.domain.indexOf('stg.rets')) domain = 'stg.rets.io:443';
-  return domain;
-}
-
-function getOrigin () {
-  return document.location.protocol
-    + '//'
-    + document.domain
-    + (80 == document.location.port ? '' : (':' + document.location.port));
-}
-
-/**
- * Logs only if debug mode
- */
-function debug () {
-  if (Retsly.debug) console.log.apply(console, arguments);
-}
-
-});
-
-
-
-
-
-
-require.alias("ForbesLindesay-ajax/index.js", "retsly-js-sdk/deps/ajax/index.js");
-require.alias("ForbesLindesay-ajax/index.js", "ajax/index.js");
-require.alias("component-type/index.js", "ForbesLindesay-ajax/deps/type/index.js");
-
-require.alias("segmentio-extend/index.js", "retsly-js-sdk/deps/extend/index.js");
-require.alias("segmentio-extend/index.js", "extend/index.js");
-
-require.alias("component-each/index.js", "retsly-js-sdk/deps/each/index.js");
-require.alias("component-each/index.js", "each/index.js");
-require.alias("component-to-function/index.js", "component-each/deps/to-function/index.js");
-
-require.alias("component-type/index.js", "component-each/deps/type/index.js");
-
-require.alias("retsly-js-sdk/index.js", "retsly-js-sdk/index.js");if (typeof exports == "object") {
-  module.exports = require("retsly-js-sdk");
-} else if (typeof define == "function" && define.amd) {
-  define(function(){ return require("retsly-js-sdk"); });
-} else {
-  this["Retsly"] = require("retsly-js-sdk");
-}})();/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
+require.register("retsly-socket.io-client/dist/socket.io.js", function(exports, require, module){
+/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
 (function() {
@@ -980,7 +228,7 @@ var io = ('undefined' === typeof module ? {} : module.exports);
    * @api public
    */
 
-  io.version = '0.9.17';
+  io.version = '0.9.16';
 
   /**
    * Protocol implemented.
@@ -4826,3 +4074,984 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
+});
+require.register("component-type/index.js", function(exports, require, module){
+/**
+ * toString ref.
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Return the type of `val`.
+ *
+ * @param {Mixed} val
+ * @return {String}
+ * @api public
+ */
+
+module.exports = function(val){
+  switch (toString.call(val)) {
+    case '[object Date]': return 'date';
+    case '[object RegExp]': return 'regexp';
+    case '[object Arguments]': return 'arguments';
+    case '[object Array]': return 'array';
+    case '[object Error]': return 'error';
+  }
+
+  if (val === null) return 'null';
+  if (val === undefined) return 'undefined';
+  if (val !== val) return 'nan';
+  if (val && val.nodeType === 1) return 'element';
+
+  return typeof val.valueOf();
+};
+
+});
+require.register("ForbesLindesay-ajax/index.js", function(exports, require, module){
+var type
+try {
+  type = require('type-of')
+} catch (ex) {
+  //hide from browserify
+  var r = require
+  type = r('type')
+}
+
+var jsonpID = 0,
+    document = window.document,
+    key,
+    name,
+    rscript = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    scriptTypeRE = /^(?:text|application)\/javascript/i,
+    xmlTypeRE = /^(?:text|application)\/xml/i,
+    jsonType = 'application/json',
+    htmlType = 'text/html',
+    blankRE = /^\s*$/
+
+var ajax = module.exports = function(options){
+  var settings = extend({}, options || {})
+  for (key in ajax.settings) if (settings[key] === undefined) settings[key] = ajax.settings[key]
+
+  ajaxStart(settings)
+
+  if (!settings.crossDomain) settings.crossDomain = /^([\w-]+:)?\/\/([^\/]+)/.test(settings.url) &&
+    RegExp.$2 != window.location.host
+
+  var dataType = settings.dataType, hasPlaceholder = /=\?/.test(settings.url)
+  if (dataType == 'jsonp' || hasPlaceholder) {
+    if (!hasPlaceholder) settings.url = appendQuery(settings.url, 'callback=?')
+    return ajax.JSONP(settings)
+  }
+
+  if (!settings.url) settings.url = window.location.toString()
+  serializeData(settings)
+
+  var mime = settings.accepts[dataType],
+      baseHeaders = { },
+      protocol = /^([\w-]+:)\/\//.test(settings.url) ? RegExp.$1 : window.location.protocol,
+      xhr = ajax.settings.xhr(), abortTimeout
+
+  if (!settings.crossDomain) baseHeaders['X-Requested-With'] = 'XMLHttpRequest'
+  if (mime) {
+    baseHeaders['Accept'] = mime
+    if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
+    xhr.overrideMimeType && xhr.overrideMimeType(mime)
+  }
+  if (settings.contentType || (settings.data && settings.type.toUpperCase() != 'GET'))
+    baseHeaders['Content-Type'] = (settings.contentType || 'application/x-www-form-urlencoded')
+  settings.headers = extend(baseHeaders, settings.headers || {})
+
+  xhr.onreadystatechange = function(){
+    if (xhr.readyState == 4) {
+      clearTimeout(abortTimeout)
+      var result, error = false
+      if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status == 0 && protocol == 'file:')) {
+        dataType = dataType || mimeToDataType(xhr.getResponseHeader('content-type'))
+        result = xhr.responseText
+
+        try {
+          if (dataType == 'script')    (1,eval)(result)
+          else if (dataType == 'xml')  result = xhr.responseXML
+          else if (dataType == 'json') result = blankRE.test(result) ? null : JSON.parse(result)
+        } catch (e) { error = e }
+
+        if (error) ajaxError(error, 'parsererror', xhr, settings)
+        else ajaxSuccess(result, xhr, settings)
+      } else {
+        ajaxError(null, 'error', xhr, settings)
+      }
+    }
+  }
+
+  var async = 'async' in settings ? settings.async : true
+  xhr.open(settings.type, settings.url, async)
+
+  for (name in settings.headers) xhr.setRequestHeader(name, settings.headers[name])
+
+  if (ajaxBeforeSend(xhr, settings) === false) {
+    xhr.abort()
+    return false
+  }
+
+  if (settings.timeout > 0) abortTimeout = setTimeout(function(){
+      xhr.onreadystatechange = empty
+      xhr.abort()
+      ajaxError(null, 'timeout', xhr, settings)
+    }, settings.timeout)
+
+  // avoid sending empty string (#319)
+  xhr.send(settings.data ? settings.data : null)
+  return xhr
+}
+
+
+// trigger a custom event and return false if it was cancelled
+function triggerAndReturn(context, eventName, data) {
+  //todo: Fire off some events
+  //var event = $.Event(eventName)
+  //$(context).trigger(event, data)
+  return true;//!event.defaultPrevented
+}
+
+// trigger an Ajax "global" event
+function triggerGlobal(settings, context, eventName, data) {
+  if (settings.global) return triggerAndReturn(context || document, eventName, data)
+}
+
+// Number of active Ajax requests
+ajax.active = 0
+
+function ajaxStart(settings) {
+  if (settings.global && ajax.active++ === 0) triggerGlobal(settings, null, 'ajaxStart')
+}
+function ajaxStop(settings) {
+  if (settings.global && !(--ajax.active)) triggerGlobal(settings, null, 'ajaxStop')
+}
+
+// triggers an extra global event "ajaxBeforeSend" that's like "ajaxSend" but cancelable
+function ajaxBeforeSend(xhr, settings) {
+  var context = settings.context
+  if (settings.beforeSend.call(context, xhr, settings) === false ||
+      triggerGlobal(settings, context, 'ajaxBeforeSend', [xhr, settings]) === false)
+    return false
+
+  triggerGlobal(settings, context, 'ajaxSend', [xhr, settings])
+}
+function ajaxSuccess(data, xhr, settings) {
+  var context = settings.context, status = 'success'
+  settings.success.call(context, data, status, xhr)
+  triggerGlobal(settings, context, 'ajaxSuccess', [xhr, settings, data])
+  ajaxComplete(status, xhr, settings)
+}
+// type: "timeout", "error", "abort", "parsererror"
+function ajaxError(error, type, xhr, settings) {
+  var context = settings.context
+  settings.error.call(context, xhr, type, error)
+  triggerGlobal(settings, context, 'ajaxError', [xhr, settings, error])
+  ajaxComplete(type, xhr, settings)
+}
+// status: "success", "notmodified", "error", "timeout", "abort", "parsererror"
+function ajaxComplete(status, xhr, settings) {
+  var context = settings.context
+  settings.complete.call(context, xhr, status)
+  triggerGlobal(settings, context, 'ajaxComplete', [xhr, settings])
+  ajaxStop(settings)
+}
+
+// Empty function, used as default callback
+function empty() {}
+
+ajax.JSONP = function(options){
+  if (!('type' in options)) return ajax(options)
+
+  var callbackName = 'jsonp' + (++jsonpID),
+    script = document.createElement('script'),
+    abort = function(){
+      //todo: remove script
+      //$(script).remove()
+      if (callbackName in window) window[callbackName] = empty
+      ajaxComplete('abort', xhr, options)
+    },
+    xhr = { abort: abort }, abortTimeout,
+    head = document.getElementsByTagName("head")[0]
+      || document.documentElement
+
+  if (options.error) script.onerror = function() {
+    xhr.abort()
+    options.error()
+  }
+
+  window[callbackName] = function(data){
+    clearTimeout(abortTimeout)
+      //todo: remove script
+      //$(script).remove()
+    delete window[callbackName]
+    ajaxSuccess(data, xhr, options)
+  }
+
+  serializeData(options)
+  script.src = options.url.replace(/=\?/, '=' + callbackName)
+
+  // Use insertBefore instead of appendChild to circumvent an IE6 bug.
+  // This arises when a base node is used (see jQuery bugs #2709 and #4378).
+  head.insertBefore(script, head.firstChild);
+
+  if (options.timeout > 0) abortTimeout = setTimeout(function(){
+      xhr.abort()
+      ajaxComplete('timeout', xhr, options)
+    }, options.timeout)
+
+  return xhr
+}
+
+ajax.settings = {
+  // Default type of request
+  type: 'GET',
+  // Callback that is executed before request
+  beforeSend: empty,
+  // Callback that is executed if the request succeeds
+  success: empty,
+  // Callback that is executed the the server drops error
+  error: empty,
+  // Callback that is executed on request complete (both: error and success)
+  complete: empty,
+  // The context for the callbacks
+  context: null,
+  // Whether to trigger "global" Ajax events
+  global: true,
+  // Transport
+  xhr: function () {
+    return new window.XMLHttpRequest()
+  },
+  // MIME types mapping
+  accepts: {
+    script: 'text/javascript, application/javascript',
+    json:   jsonType,
+    xml:    'application/xml, text/xml',
+    html:   htmlType,
+    text:   'text/plain'
+  },
+  // Whether the request is to another domain
+  crossDomain: false,
+  // Default timeout
+  timeout: 0
+}
+
+function mimeToDataType(mime) {
+  return mime && ( mime == htmlType ? 'html' :
+    mime == jsonType ? 'json' :
+    scriptTypeRE.test(mime) ? 'script' :
+    xmlTypeRE.test(mime) && 'xml' ) || 'text'
+}
+
+function appendQuery(url, query) {
+  return (url + '&' + query).replace(/[&?]{1,2}/, '?')
+}
+
+// serialize payload and append it to the URL for GET requests
+function serializeData(options) {
+  if (type(options.data) === 'object') options.data = param(options.data)
+  if (options.data && (!options.type || options.type.toUpperCase() == 'GET'))
+    options.url = appendQuery(options.url, options.data)
+}
+
+ajax.get = function(url, success){ return ajax({ url: url, success: success }) }
+
+ajax.post = function(url, data, success, dataType){
+  if (type(data) === 'function') dataType = dataType || success, success = data, data = null
+  return ajax({ type: 'POST', url: url, data: data, success: success, dataType: dataType })
+}
+
+ajax.getJSON = function(url, success){
+  return ajax({ url: url, success: success, dataType: 'json' })
+}
+
+var escape = encodeURIComponent
+
+function serialize(params, obj, traditional, scope){
+  var array = type(obj) === 'array';
+  for (var key in obj) {
+    var value = obj[key];
+
+    if (scope) key = traditional ? scope : scope + '[' + (array ? '' : key) + ']'
+    // handle data in serializeArray() format
+    if (!scope && array) params.add(value.name, value.value)
+    // recurse into nested objects
+    else if (traditional ? (type(value) === 'array') : (type(value) === 'object'))
+      serialize(params, value, traditional, key)
+    else params.add(key, value)
+  }
+}
+
+function param(obj, traditional){
+  var params = []
+  params.add = function(k, v){ this.push(escape(k) + '=' + escape(v)) }
+  serialize(params, obj, traditional)
+  return params.join('&').replace('%20', '+')
+}
+
+function extend(target) {
+  var slice = Array.prototype.slice;
+  slice.call(arguments, 1).forEach(function(source) {
+    for (key in source)
+      if (source[key] !== undefined)
+        target[key] = source[key]
+  })
+  return target
+}
+});
+require.register("segmentio-extend/index.js", function(exports, require, module){
+
+module.exports = function extend (object) {
+    // Takes an unlimited number of extenders.
+    var args = Array.prototype.slice.call(arguments, 1);
+
+    // For each extender, copy their properties on our object.
+    for (var i = 0, source; source = args[i]; i++) {
+        if (!source) continue;
+        for (var property in source) {
+            object[property] = source[property];
+        }
+    }
+
+    return object;
+};
+});
+require.register("component-props/index.js", function(exports, require, module){
+/**
+ * Global Names
+ */
+
+var globals = /\b(Array|Date|Object|Math|JSON)\b/g;
+
+/**
+ * Return immediate identifiers parsed from `str`.
+ *
+ * @param {String} str
+ * @param {String|Function} map function or prefix
+ * @return {Array}
+ * @api public
+ */
+
+module.exports = function(str, fn){
+  var p = unique(props(str));
+  if (fn && 'string' == typeof fn) fn = prefixed(fn);
+  if (fn) return map(str, p, fn);
+  return p;
+};
+
+/**
+ * Return immediate identifiers in `str`.
+ *
+ * @param {String} str
+ * @return {Array}
+ * @api private
+ */
+
+function props(str) {
+  return str
+    .replace(/\.\w+|\w+ *\(|"[^"]*"|'[^']*'|\/([^/]+)\//g, '')
+    .replace(globals, '')
+    .match(/[a-zA-Z_]\w*/g)
+    || [];
+}
+
+/**
+ * Return `str` with `props` mapped with `fn`.
+ *
+ * @param {String} str
+ * @param {Array} props
+ * @param {Function} fn
+ * @return {String}
+ * @api private
+ */
+
+function map(str, props, fn) {
+  var re = /\.\w+|\w+ *\(|"[^"]*"|'[^']*'|\/([^/]+)\/|[a-zA-Z_]\w*/g;
+  return str.replace(re, function(_){
+    if ('(' == _[_.length - 1]) return fn(_);
+    if (!~props.indexOf(_)) return _;
+    return fn(_);
+  });
+}
+
+/**
+ * Return unique array.
+ *
+ * @param {Array} arr
+ * @return {Array}
+ * @api private
+ */
+
+function unique(arr) {
+  var ret = [];
+
+  for (var i = 0; i < arr.length; i++) {
+    if (~ret.indexOf(arr[i])) continue;
+    ret.push(arr[i]);
+  }
+
+  return ret;
+}
+
+/**
+ * Map with prefix `str`.
+ */
+
+function prefixed(str) {
+  return function(_){
+    return str + _;
+  };
+}
+
+});
+require.register("component-to-function/index.js", function(exports, require, module){
+/**
+ * Module Dependencies
+ */
+
+try {
+  var expr = require('props');
+} catch(e) {
+  var expr = require('props-component');
+}
+
+/**
+ * Expose `toFunction()`.
+ */
+
+module.exports = toFunction;
+
+/**
+ * Convert `obj` to a `Function`.
+ *
+ * @param {Mixed} obj
+ * @return {Function}
+ * @api private
+ */
+
+function toFunction(obj) {
+  switch ({}.toString.call(obj)) {
+    case '[object Object]':
+      return objectToFunction(obj);
+    case '[object Function]':
+      return obj;
+    case '[object String]':
+      return stringToFunction(obj);
+    case '[object RegExp]':
+      return regexpToFunction(obj);
+    default:
+      return defaultToFunction(obj);
+  }
+}
+
+/**
+ * Default to strict equality.
+ *
+ * @param {Mixed} val
+ * @return {Function}
+ * @api private
+ */
+
+function defaultToFunction(val) {
+  return function(obj){
+    return val === obj;
+  }
+}
+
+/**
+ * Convert `re` to a function.
+ *
+ * @param {RegExp} re
+ * @return {Function}
+ * @api private
+ */
+
+function regexpToFunction(re) {
+  return function(obj){
+    return re.test(obj);
+  }
+}
+
+/**
+ * Convert property `str` to a function.
+ *
+ * @param {String} str
+ * @return {Function}
+ * @api private
+ */
+
+function stringToFunction(str) {
+  // immediate such as "> 20"
+  if (/^ *\W+/.test(str)) return new Function('_', 'return _ ' + str);
+
+  // properties such as "name.first" or "age > 18" or "age > 18 && age < 36"
+  return new Function('_', 'return ' + get(str));
+}
+
+/**
+ * Convert `object` to a function.
+ *
+ * @param {Object} object
+ * @return {Function}
+ * @api private
+ */
+
+function objectToFunction(obj) {
+  var match = {}
+  for (var key in obj) {
+    match[key] = typeof obj[key] === 'string'
+      ? defaultToFunction(obj[key])
+      : toFunction(obj[key])
+  }
+  return function(val){
+    if (typeof val !== 'object') return false;
+    for (var key in match) {
+      if (!(key in val)) return false;
+      if (!match[key](val[key])) return false;
+    }
+    return true;
+  }
+}
+
+/**
+ * Built the getter function. Supports getter style functions
+ *
+ * @param {String} str
+ * @return {String}
+ * @api private
+ */
+
+function get(str) {
+  var props = expr(str);
+  if (!props.length) return '_.' + str;
+
+  var val;
+  for(var i = 0, prop; prop = props[i]; i++) {
+    val = '_.' + prop;
+    val = "('function' == typeof " + val + " ? " + val + "() : " + val + ")";
+    str = str.replace(new RegExp(prop, 'g'), val);
+  }
+
+  return str;
+}
+
+});
+require.register("component-each/index.js", function(exports, require, module){
+
+/**
+ * Module dependencies.
+ */
+
+var type = require('type');
+var toFunction = require('to-function');
+
+/**
+ * HOP reference.
+ */
+
+var has = Object.prototype.hasOwnProperty;
+
+/**
+ * Iterate the given `obj` and invoke `fn(val, i)`
+ * in optional context `ctx`.
+ *
+ * @param {String|Array|Object} obj
+ * @param {Function} fn
+ * @param {Object} [ctx]
+ * @api public
+ */
+
+module.exports = function(obj, fn, ctx){
+  fn = toFunction(fn);
+  ctx = ctx || this;
+  switch (type(obj)) {
+    case 'array':
+      return array(obj, fn, ctx);
+    case 'object':
+      if ('number' == typeof obj.length) return array(obj, fn, ctx);
+      return object(obj, fn, ctx);
+    case 'string':
+      return string(obj, fn, ctx);
+  }
+};
+
+/**
+ * Iterate string chars.
+ *
+ * @param {String} obj
+ * @param {Function} fn
+ * @param {Object} ctx
+ * @api private
+ */
+
+function string(obj, fn, ctx) {
+  for (var i = 0; i < obj.length; ++i) {
+    fn.call(ctx, obj.charAt(i), i);
+  }
+}
+
+/**
+ * Iterate object keys.
+ *
+ * @param {Object} obj
+ * @param {Function} fn
+ * @param {Object} ctx
+ * @api private
+ */
+
+function object(obj, fn, ctx) {
+  for (var key in obj) {
+    if (has.call(obj, key)) {
+      fn.call(ctx, key, obj[key]);
+    }
+  }
+}
+
+/**
+ * Iterate array-ish.
+ *
+ * @param {Array|Object} obj
+ * @param {Function} fn
+ * @param {Object} ctx
+ * @api private
+ */
+
+function array(obj, fn, ctx) {
+  for (var i = 0; i < obj.length; ++i) {
+    fn.call(ctx, obj[i], i);
+  }
+}
+
+});
+require.register("retsly-sdk/index.js", function(exports, require, module){
+
+/**
+ * Dependencies
+ */
+var extend = require('extend');
+var io = require('socket.io');
+var ajax = require('ajax');
+var each = require('each');
+
+module.exports = Retsly;
+
+var _retsly, _client, _opts;
+
+/**
+ * Core SDK
+ */
+function Retsly (client_id, options) {
+  if (!client_id)
+    throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
+
+  var domain = this.getDomain();
+
+  this.host = domain;
+  this.token = null;
+  this.client_id = client_id;
+  this.options = extend({urlBase: '/api/v1'}, options);
+  this.io = io.connect(domain);
+
+  this.__init_stack = [];
+  _retsly = this;
+  this.init();
+}
+
+/**
+ * debug messages print if true
+ */
+Retsly.debug = false;
+
+/**
+ * Retsly singleton-ish
+ * @return {Retsly}
+ * @api public
+ */
+Retsly.create = function create (client, opts) {
+  var s = !arguments.length;
+  client = client || _client;
+  opts = opts || _opts;
+  if (!s && !client) throw new Error('call Retsly.create() with client id and options');
+  return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, opts));
+}
+
+/**
+ * Set the Retsly Client ID
+ */
+Retsly.client = function (id) {
+  _client = id;
+  return Retsly;
+}
+
+/*
+ * Set Retsly Options
+ */
+Retsly.options = function (opts) {
+  _opts = opts;
+  return Retsly;
+}
+
+/**
+ * Initialze Retsly session
+ */
+Retsly.prototype.init = function() {
+  var self = this;
+  debug('--> Loading Retsly SDK...');
+
+  // <!-- Make sure you ask @slajax before changing this
+  // If this breaks again, you will be sorry.
+
+  if( document.getElementById('retsly-css-sdk') ) return;
+
+  var css = document.createElement('link');
+    css.id = 'retsly-css-sdk';
+    css.media = 'all';
+    css.rel = 'stylesheet';
+    css.href = getDomain()+'/css/sdk'
+
+  var cssLoaded = function() {
+    ajax({
+      type: 'POST',
+      data: { origin: getOrigin(), action: 'set' },
+      url: self.getURL('session'),
+      xhrFields: { withCredentials: true },
+      beforeSend: function(xhr) {
+        xhr.withCredentials = true;
+      },
+      error: function (xhr,err) {throw new Error(err)},
+      success: function(sid) {
+        self.io.emit('authorize', { sid: sid }, function(data) {
+          if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
+          debug('<-- Retsly SDK Loaded!');
+          self.ready();
+        });
+      }
+    });
+  };
+
+  css.onload = cssLoaded;
+  css.onreadystatechange = function() {
+    if(this.readState === 'loaded' || this.readState === 'complete') cssLoaded();
+  };
+  document.getElementsByTagName('head')[0].appendChild(css);
+
+  // If this breaks again, you will be sorry.
+  // Make sure you ask @slajax before changing this -->
+};
+
+/**
+ * Log out a Retsly session;
+ */
+Retsly.prototype.logout = function(cb) {
+  cb = cb || function() {};
+  ajax({
+    type: 'POST',
+    xhrFields: { withCredentials: true },
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
+    data: { origin: getOrigin(), action: 'del' },
+    url: this.getURL('session'),
+    error: function (error) { throw new Error(error); },
+    success: cb
+  });
+  return this;
+};
+
+/**
+ * Set an oauth token for extended privileges on current session.
+ */
+Retsly.prototype.setToken = function(token) {
+  this.token = token;
+  return this;
+};
+
+/**
+ * Get the oauth token for current session.
+ */
+Retsly.prototype.getToken = function() {
+  return this.token;
+};
+
+/**
+ * Get the Retsly Client ID
+ */
+Retsly.prototype.getClient = function() {
+  return this.client_id;
+}
+
+/**
+ * Get the Retsly API Host
+ */
+Retsly.prototype.getHost = function() {
+  return this.host;
+};
+
+/**
+ * Get complete URL for the given resource
+ */
+Retsly.prototype.getURL = function (url) {
+  return this.host + this.options.urlBase + '/' + url;
+};
+
+/**
+ * Add an init function to the ready stack, or execute the stack
+ */
+Retsly.prototype.ready = function(cb) {
+  if (cb) this.__init_stack.push(cb);
+  else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
+  return this;
+};
+
+/**
+ * API Methods
+ */
+Retsly.prototype.get = function(url, query, cb) {
+  return this.request('get', url, query, cb);
+};
+
+Retsly.prototype.post = function(url, body, cb) {
+  return this.request('post', url, body, cb);
+};
+
+Retsly.prototype.put = function(url, body, cb) {
+  return this.request('put', url, body, cb);
+};
+
+Retsly.prototype.del = function(url, body, cb) {
+  return this.request('delete', url, body, cb);
+};
+
+Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
+  var options = {};
+  options.url = url;
+  options.query = query;
+  options.query.client_id = this.client_id;
+
+  if(this.getToken())
+    options.query.access_token = this.getToken();
+
+  this.io.emit('subscribe', options, icb);
+  this.io.on(method, scb);
+  return this;
+};
+
+Retsly.prototype.request = function(method, url, query, cb) {
+  // query is optional
+  if (undefined === cb && 'function' == typeof query) {
+    cb = query;
+    query = {};
+  }
+  query = query || {};
+  debug('%s --> %s', method, url, query);
+
+  var options = {};
+  options.query = {};
+  if ('get' == method) options.query = query;
+  else options.body = query;
+  options.method = method;
+  options.url = url;
+
+  var token = this.getToken();
+  if(token) options.query.access_token = token;
+  options.query.client_id = this.client_id;
+
+  this.io.emit('api', options, function(res) {
+    delete query['client_id'];
+    delete query['access_token'];
+    debug(method, '<-- ', url, query);
+    debug(' |---- response: ', res);
+    if(typeof cb === 'function') cb(res);
+  });
+  return this;
+};
+
+/**
+ * Returns API domain for document.domain
+ */
+var getDomain = Retsly.prototype.getDomain = function () {
+  var domain = 'https://rets.io:443';
+  if (~document.domain.indexOf('dev.rets')) domain = 'https://dev.rets.io:443';
+  if (~document.domain.indexOf('stg.rets')) domain = 'https://stg.rets.io:443';
+  return domain;
+};
+
+/**
+ * Returns the origin for XHR CORS requests
+ */
+var getOrigin = Retsly.prototype.getOrigin = function () {
+  return document.location.protocol
+    + '//'
+    + document.domain
+    + (document.location.port ? (':' + document.location.port) : '');
+};
+
+/**
+ * Cookie getter
+ */
+var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
+  c = document.cookie.split('; ');
+  var cookies = {};
+  for(i=c.length-1; i>=0; i--){
+    C = c[i].split('=');
+    cookies[C[0]] = C[1];
+  }
+  return cookies[name];
+}
+
+/**
+ * Cookie setter
+ */
+var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
+  var expires = '';
+  if (days) {
+    var date = new Date();
+    date.setTime(date.getTime()+(days*24*60*60*1000));
+    expires = '; expires='+date.toGMTString();
+  }
+  document.cookie = name+'='+value+expires+'; path=/';
+}
+
+/**
+ * Logs only if debug mode
+ */
+function debug () {
+  if (Retsly.debug) console.log.apply(console, arguments);
+}
+
+});
+
+
+
+
+
+
+
+
+require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/socket.io/dist/socket.io.js");
+require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/socket.io/index.js");
+require.alias("retsly-socket.io-client/dist/socket.io.js", "socket.io/index.js");
+require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-socket.io-client/index.js");
+require.alias("ForbesLindesay-ajax/index.js", "retsly-sdk/deps/ajax/index.js");
+require.alias("ForbesLindesay-ajax/index.js", "ajax/index.js");
+require.alias("component-type/index.js", "ForbesLindesay-ajax/deps/type/index.js");
+
+require.alias("segmentio-extend/index.js", "retsly-sdk/deps/extend/index.js");
+require.alias("segmentio-extend/index.js", "extend/index.js");
+
+require.alias("component-each/index.js", "retsly-sdk/deps/each/index.js");
+require.alias("component-each/index.js", "each/index.js");
+require.alias("component-to-function/index.js", "component-each/deps/to-function/index.js");
+require.alias("component-props/index.js", "component-to-function/deps/props/index.js");
+
+require.alias("component-type/index.js", "component-each/deps/type/index.js");
+
+require.alias("retsly-sdk/index.js", "retsly-sdk/index.js");if (typeof exports == "object") {
+  module.exports = require("retsly-sdk");
+} else if (typeof define == "function" && define.amd) {
+  define(function(){ return require("retsly-sdk"); });
+} else {
+  this["Retsly"] = require("retsly-sdk");
+}})();
