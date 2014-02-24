@@ -2,7 +2,7 @@
 /**
  * Dependencies
  */
-var Retsly = require('retsly-js-sdk');
+var Retsly = require('retsly-sdk');
 var assert = require('assert');
 var noop = function () {};
 
@@ -36,7 +36,7 @@ test('has a socket.io connection', function () {
   assert(r.io);
 });
 
-Retsly = require('retsly-js-sdk');
+Retsly = require('retsly-sdk');
 
 suite('Retsly.create()');
 
