@@ -1,14 +1,3 @@
-<pre>
-                          ,------.        ,--.       ,--.
-                          |  .--. ',---.,-'  '-.,---.|  ,--. ,--.
-                          |  '--'.| .-. '-.  .-(  .-'|  |\  '  /
-                          |  |\  \\   --. |  | .-'  `|  | \   '
-                          `--' '--'`----' `--' `----'`--.-'  /
-                            Make Real Estate Apps in    `---'
-                               Minutes Not Months
-
-</pre>
-
 # retsly-js-sdk
 
 Retsly core SDK. Useful for clientside integration with [Retsly](http://rets.ly).
@@ -39,7 +28,7 @@ $ component install retsly/retsly-js-sdk
 Use with `require`:
 
 ```js
-var Retsly = require('retsly')
+var Retsly = require('retsly-sdk')
 ```
 
 #### Build from source
@@ -71,7 +60,7 @@ for instructions.
 ## Example
 
 ```js
-var retsly = require('retsly');
+var retsly = require('retsly-sdk');
 var retsly = new Retsly('YOURCLIENTID');
 retsly.ready(function(){
   retsly.get('/api/v1/listing/sandicor.json', {limit: 10}, function(res){
