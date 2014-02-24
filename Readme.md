@@ -1,3 +1,5 @@
+[![wercker status](https://app.wercker.com/status/0fdacfc21927ee822804af8c7887568d/s/ "wercker status")](https://app.wercker.com/project/bykey/0fdacfc21927ee822804af8c7887568d)
+
 # retsly-js-sdk
 
 Retsly core SDK. Useful for clientside integration with [Retsly](http://rets.ly).
