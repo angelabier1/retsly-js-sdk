@@ -1,10 +1,4 @@
-
-<div style="text-align: right" markdown="1">
-  [![wercker status](https://app.wercker.com/status/0fdacfc21927ee822804af8c7887568d/s/ "wercker status")](https://app.wercker.com/project/bykey/0fdacfc21927ee822804af8c7887568d)
-</div>
-
-# retsly-js-sdk
-
+# retsly-js-sdk [![wercker status](https://app.wercker.com/status/0fdacfc21927ee822804af8c7887568d/s/ "wercker status")](https://app.wercker.com/project/bykey/0fdacfc21927ee822804af8c7887568d)
 Retsly core SDK. Useful for clientside integration with [Retsly](http://rets.ly).
 
 This component provides low-level access to the socket API. For a higher-level
