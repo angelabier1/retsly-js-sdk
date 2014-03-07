@@ -95,7 +95,7 @@ Retsly.prototype.init = function() {
       error: function (xhr,err) {throw new Error(err)},
       success: function(sid) {
         self.io.emit('authorize', { sid: sid }, function(data) {
-          if(typeof data.bundle === 'string') setCookie('retsly.sid', data.bundle);
+          if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
           debug('<-- Retsly SDK Loaded!');
           self.ready();
         });
