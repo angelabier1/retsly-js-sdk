@@ -77,36 +77,29 @@ Retsly.prototype.init = function() {
 
   if( document.getElementById('retsly-css-sdk') ) return;
 
+  ajax({
+    type: 'POST',
+    data: { origin: getOrigin(), action: 'set' },
+    url: self.getURL('session'),
+    xhrFields: { withCredentials: true },
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
+    error: function (xhr,err) {throw new Error(err)},
+    success: function(sid) {
+      self.io.emit('authorize', { sid: sid }, function(data) {
+        if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
+        debug('<-- Retsly SDK Loaded!');
+        self.ready();
+      });
+    }
+  });
+
   var css = document.createElement('link');
     css.id = 'retsly-css-sdk';
     css.media = 'all';
     css.rel = 'stylesheet';
     css.href = getDomain()+'/css/sdk'
-
-  var cssLoaded = function() {
-    ajax({
-      type: 'POST',
-      data: { origin: getOrigin(), action: 'set' },
-      url: self.getURL('session'),
-      xhrFields: { withCredentials: true },
-      beforeSend: function(xhr) {
-        xhr.withCredentials = true;
-      },
-      error: function (xhr,err) {throw new Error(err)},
-      success: function(sid) {
-        self.io.emit('authorize', { sid: sid }, function(data) {
-          if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
-          debug('<-- Retsly SDK Loaded!');
-          self.ready();
-        });
-      }
-    });
-  };
-
-  css.onload = cssLoaded;
-  css.onreadystatechange = function() {
-    if(this.readState === 'loaded' || this.readState === 'complete') cssLoaded();
-  };
   document.getElementsByTagName('head')[0].appendChild(css);
 
   // If this breaks again, you will be sorry.
