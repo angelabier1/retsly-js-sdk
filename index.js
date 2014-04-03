@@ -24,7 +24,16 @@ function Retsly (client_id, options) {
   this.token = null;
   this.client_id = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
-  this.io = io.connect(domain);
+  this.io = io.connect(domain, {
+    'reconnection delay': 5000, // retry every 2 seconds
+    'reconnection limit': 100, // defaults to Infinity
+    'max reconnection attempts': Infinity // defaults to 10
+  });
+
+  this.io.on('disconnect', function() {
+    if(!this.io.socket.connected)
+      this.io.socket.reconnect();
+  }.bind(this));
 
   this.__init_stack = [];
   _retsly = this;
