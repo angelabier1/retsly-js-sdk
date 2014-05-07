@@ -30,13 +30,14 @@ function Retsly (client_id, options) {
     'max reconnection attempts': Infinity // defaults to 10
   });
 
-  this.io.on('disconnect', function() {
-    if(!this.io.socket.connected)
-      this.io.socket.reconnect();
-  }.bind(this));
-
   this.__init_stack = [];
   _retsly = this;
+
+  this.io.on('disconnect', function() {
+    if(!_retsly.io.socket.connected)
+      _retsly.io.socket.reconnect();
+  });
+
   this.init();
 }
 
