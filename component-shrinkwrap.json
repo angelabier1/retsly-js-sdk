@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "component/each": "0.2.3",
+    "component/inherit": "0.0.3",
+    "component/props": "1.1.1",
+    "component/to-function": "2.0.0",
+    "component/type": "1.0.0",
+    "forbeslindesay/ajax": "0.0.2",
+    "retsly/socket.io-client": "0.9.16",
+    "segmentio/extend": "0.0.1",
+    "timoxley/assert": "0.0.1",
+    "visionmedia/mocha": "1.12.1"
+  }
+}
