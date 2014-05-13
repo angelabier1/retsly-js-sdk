@@ -4104,11 +4104,15 @@ module.exports = function(val){
   if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
 
-  return typeof val.valueOf();
+  val = val.valueOf
+    ? val.valueOf()
+    : Object.prototype.valueOf.apply(val)
+
+  return typeof val;
 };
 
 });
-require.register("ForbesLindesay-ajax/index.js", function(exports, require, module){
+require.register("forbeslindesay-ajax/index.js", function(exports, require, module){
 var type
 try {
   type = require('type-of')
@@ -4423,7 +4427,7 @@ require.register("component-props/index.js", function(exports, require, module){
  * Global Names
  */
 
-var globals = /\b(Array|Date|Object|Math|JSON)\b/g;
+var globals = /\b(this|Array|Date|Object|Math|JSON)\b/g;
 
 /**
  * Return immediate identifiers parsed from `str`.
@@ -4453,7 +4457,7 @@ function props(str) {
   return str
     .replace(/\.\w+|\w+ *\(|"[^"]*"|'[^']*'|\/([^/]+)\//g, '')
     .replace(globals, '')
-    .match(/[a-zA-Z_]\w*/g)
+    .match(/[$a-zA-Z_]\w*/g)
     || [];
 }
 
@@ -4748,11 +4752,24 @@ function Retsly (client_id, options) {
   this.token = null;
   this.client_id = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
-  this.io = io.connect(domain);
 
   this.__init_stack = [];
   _retsly = this;
+
   this.init();
+
+  // set up socket.io connection
+  this.io = io.connect(getDomain(), {
+    'reconnection delay': 5000, // retry every 2 seconds
+    'reconnection limit': 100, // defaults to Infinity
+    'max reconnection attempts': Infinity // defaults to 10
+  });
+
+  // if we disconnect, try to reconnet
+  this.io.on('disconnect', function() {
+    if(!_retsly.io.socket.connected)
+      _retsly.io.socket.reconnect();
+  });
 }
 
 /**
@@ -4793,31 +4810,9 @@ Retsly.options = function (opts) {
  * Initialze Retsly session
  */
 Retsly.prototype.init = function() {
-  var self = this;
   debug('--> Loading Retsly SDK...');
 
-  // <!-- Make sure you ask @slajax before changing this
-  // If this breaks again, you will be sorry.
-
   if( document.getElementById('retsly-css-sdk') ) return;
-
-  ajax({
-    type: 'POST',
-    data: { origin: getOrigin(), action: 'set' },
-    url: self.getURL('session'),
-    xhrFields: { withCredentials: true },
-    beforeSend: function(xhr) {
-      xhr.withCredentials = true;
-    },
-    error: function (xhr,err) {throw new Error(err)},
-    success: function(sid) {
-      self.io.emit('authorize', { sid: sid }, function(data) {
-        if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
-        debug('<-- Retsly SDK Loaded!');
-        self.ready();
-      });
-    }
-  });
 
   var css = document.createElement('link');
     css.id = 'retsly-css-sdk';
@@ -4826,8 +4821,38 @@ Retsly.prototype.init = function() {
     css.href = getDomain()+'/css/sdk'
   document.getElementsByTagName('head')[0].appendChild(css);
 
-  // If this breaks again, you will be sorry.
-  // Make sure you ask @slajax before changing this -->
+  // try to establish a session, then connect
+  this.session(this.connect.bind(this));
+};
+
+Retsly.prototype.connect = function(sid) {
+
+  // on first try, express will not be able to return a sid
+  if(sid === 'false') return this.session(this.connect.bind(this));
+
+  // sync user sid cookie over sockets
+  this.io.emit('authorize', { sid: sid }, function(data) {
+    if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
+    debug('<-- Retsly SDK Loaded!');
+    this.ready();
+  }.bind(this));
+
+};
+
+Retsly.prototype.session = function(cb) {
+
+  ajax({
+    type: 'POST',
+    data: { origin: getOrigin(), action: 'set' },
+    url: this.getURL('session'),
+    xhrFields: { withCredentials: true },
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
+    error: function (xhr,err) { throw new Error(err) },
+    success: cb
+  });
+
 };
 
 /**
@@ -5023,9 +5048,9 @@ require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/sock
 require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/socket.io/index.js");
 require.alias("retsly-socket.io-client/dist/socket.io.js", "socket.io/index.js");
 require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-socket.io-client/index.js");
-require.alias("ForbesLindesay-ajax/index.js", "retsly-sdk/deps/ajax/index.js");
-require.alias("ForbesLindesay-ajax/index.js", "ajax/index.js");
-require.alias("component-type/index.js", "ForbesLindesay-ajax/deps/type/index.js");
+require.alias("forbeslindesay-ajax/index.js", "retsly-sdk/deps/ajax/index.js");
+require.alias("forbeslindesay-ajax/index.js", "ajax/index.js");
+require.alias("component-type/index.js", "forbeslindesay-ajax/deps/type/index.js");
 
 require.alias("segmentio-extend/index.js", "retsly-sdk/deps/extend/index.js");
 require.alias("segmentio-extend/index.js", "extend/index.js");
@@ -5040,7 +5065,7 @@ require.alias("component-type/index.js", "component-each/deps/type/index.js");
 require.alias("retsly-sdk/index.js", "retsly-sdk/index.js");if (typeof exports == "object") {
   module.exports = require("retsly-sdk");
 } else if (typeof define == "function" && define.amd) {
-  define(function(){ return require("retsly-sdk"); });
+  define([], function(){ return require("retsly-sdk"); });
 } else {
   this["Retsly"] = require("retsly-sdk");
 }})();
