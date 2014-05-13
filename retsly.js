@@ -4104,11 +4104,7 @@ module.exports = function(val){
   if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
 
-  val = val.valueOf
-    ? val.valueOf()
-    : Object.prototype.valueOf.apply(val)
-
-  return typeof val;
+  return typeof val.valueOf();
 };
 
 });
@@ -4822,13 +4818,13 @@ Retsly.prototype.init = function() {
   document.getElementsByTagName('head')[0].appendChild(css);
 
   // try to establish a session, then connect
-  this.session(this.connect.bind(this));
+  this.session(this.connect);
 };
 
 Retsly.prototype.connect = function(sid) {
 
   // on first try, express will not be able to return a sid
-  if(sid === 'false') return this.session(this.connect.bind(this));
+  if(sid === 'false') return this.session(this.connect);
 
   // sync user sid cookie over sockets
   this.io.emit('authorize', { sid: sid }, function(data) {
