@@ -4104,7 +4104,11 @@ module.exports = function(val){
   if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
 
-  return typeof val.valueOf();
+  val = val.valueOf
+    ? val.valueOf()
+    : Object.prototype.valueOf.apply(val)
+
+  return typeof val;
 };
 
 });
@@ -4806,6 +4810,7 @@ Retsly.options = function (opts) {
  * Initialze Retsly session
  */
 Retsly.prototype.init = function() {
+  var self = this;
   debug('--> Loading Retsly SDK...');
 
   if( document.getElementById('retsly-css-sdk') ) return;
@@ -4818,13 +4823,14 @@ Retsly.prototype.init = function() {
   document.getElementsByTagName('head')[0].appendChild(css);
 
   // try to establish a session, then connect
-  this.session(this.connect);
+  this.session(self.connect.bind(this));
 };
 
 Retsly.prototype.connect = function(sid) {
+  var self = this;
 
   // on first try, express will not be able to return a sid
-  if(sid === 'false') return this.session(this.connect);
+  if(sid === 'false') return this.session(self.connect.bind(this));
 
   // sync user sid cookie over sockets
   this.io.emit('authorize', { sid: sid }, function(data) {
@@ -4846,7 +4852,7 @@ Retsly.prototype.session = function(cb) {
       xhr.withCredentials = true;
     },
     error: function (xhr,err) { throw new Error(err) },
-    success: cb
+    success: cb.bind(this)
   });
 
 };
