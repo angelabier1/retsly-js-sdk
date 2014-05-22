@@ -28,7 +28,7 @@ function Retsly (client_id, options) {
   this.__init_stack = [];
   _retsly = this;
 
-  this.init();
+  debug('--> Connecting to Retsly...');
 
   // set up socket.io connection
   this.io = io.connect(getDomain(), {
@@ -37,11 +37,24 @@ function Retsly (client_id, options) {
     'max reconnection attempts': Infinity // defaults to 10
   });
 
+  this.io.on('connect', function() {
+    debug('<-- Connected to Retsly!');
+    // try to establish a session, then connect
+    this.session(this.connect.bind(this));
+  }.bind(this))
+
   // if we disconnect, try to reconnet
   this.io.on('disconnect', function() {
     if(!_retsly.io.socket.connected)
       _retsly.io.socket.reconnect();
   });
+
+  this.io.on('reconnect_failed', function() {
+    this.ready();
+  }.bind(this))
+
+  this.css();
+
 }
 
 /**
@@ -79,11 +92,9 @@ Retsly.options = function (opts) {
 }
 
 /**
- * Initialze Retsly session
+ * Initialze Retsly CSS
  */
-Retsly.prototype.init = function() {
-  var self = this;
-  debug('--> Loading Retsly SDK...');
+Retsly.prototype.css = function() {
 
   if( document.getElementById('retsly-css-sdk') ) return;
 
@@ -94,22 +105,24 @@ Retsly.prototype.init = function() {
     css.href = getDomain()+'/css/sdk'
   document.getElementsByTagName('head')[0].appendChild(css);
 
-  // try to establish a session, then connect
-  this.session(self.connect.bind(this));
 };
 
 Retsly.prototype.connect = function(sid) {
   var self = this;
 
-  // on first try, express will not be able to return a sid
-  if(sid === 'false') return this.session(self.connect.bind(this));
+  debug('--> Requesting Retsly Session...')
 
-  // sync user sid cookie over sockets
-  this.io.emit('authorize', { sid: sid }, function(data) {
-    if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
-    debug('<-- Retsly SDK Loaded!');
-    this.ready();
-  }.bind(this));
+  // on first try, express will not be able to return a sid
+  if(sid === 'false') return this.session(this.connect.bind(this));
+
+  // session sid established, syncing cookie
+  setCookie('retsly.sid', encodeURIComponent(sid));
+  debug('<-- Retsly Session Established!', { sid: sid });
+
+  // tell retsly.io to listen to session
+  this.io.emit('authorize', { sid: sid });
+
+  this.ready();
 
 };
 
@@ -190,6 +203,7 @@ Retsly.prototype.getURL = function (url) {
 Retsly.prototype.ready = function(cb) {
   if (cb) this.__init_stack.push(cb);
   else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
+  if(!cb) this.__init_stack = []; //clear stack
   return this;
 };
 
