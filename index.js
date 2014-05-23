@@ -140,7 +140,10 @@ Retsly.prototype.session = function(cb) {
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
-    error: function (xhr,err) { throw new Error(err) },
+    error: function (xhr,err) {
+      this.ready();
+      throw new Error('Could not set Retsly session');
+    }.bind(this),
     success: cb.bind(this)
   });
 
@@ -159,8 +162,10 @@ Retsly.prototype.logout = function(cb) {
     },
     data: { origin: getOrigin(), action: 'del' },
     url: this.getURL('session'),
-    error: function (error) { throw new Error(error); },
-    success: cb
+    error: function (error) {
+      throw new Error('Could not delete Retsly session');
+    },
+    success: cb.bind(this)
   });
   return this;
 };
