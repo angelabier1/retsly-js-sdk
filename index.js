@@ -9,7 +9,7 @@ var each = require('each');
 
 module.exports = Retsly;
 
-var _retsly, _client, _opts;
+var _retsly, _client, _opts, _attempts = 0;
 
 /**
  * Core SDK
@@ -40,7 +40,7 @@ function Retsly (client_id, options) {
   this.io.on('connect', function() {
     debug('<-- Connected to Retsly!');
     // try to establish a session, then connect
-    this.session(this.connect.bind(this));
+    if(_attempts === 0) this.session(this.connect.bind(this));
   }.bind(this))
 
   // if we disconnect, try to reconnet
@@ -110,7 +110,9 @@ Retsly.prototype.css = function() {
 Retsly.prototype.connect = function(sid) {
   var self = this;
 
-  debug('--> Requesting Retsly Session...')
+  if(_attempts > 2) return this.ready();
+
+  debug('--> Requesting Retsly Session...', { attempts: _attempts });
 
   // on first try, express will not be able to return a sid
   if(sid === 'false') return this.session(this.connect.bind(this));
@@ -127,6 +129,8 @@ Retsly.prototype.connect = function(sid) {
 };
 
 Retsly.prototype.session = function(cb) {
+
+  _attempts++;
 
   ajax({
     type: 'POST',
