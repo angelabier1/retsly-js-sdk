@@ -6,6 +6,7 @@ var extend = require('extend');
 var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
+var params = require('query-string')
 
 module.exports = Retsly;
 
@@ -14,14 +15,19 @@ var _retsly, _client, _opts, _attempts = 0;
 /**
  * Core SDK
  */
-function Retsly (client_id, options) {
+function Retsly (client_id, token, options) {
+
+  if (!token)
+    throw new Error('You must provide a browser token - ie: new Retsly(\'client_id\', \'token\');');
+
   if (!client_id)
-    throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
+    throw new Error('You must provide a client_id - ie: new Retsly(\'client_id\', \'token\');');
 
   var domain = this.getDomain();
 
   this.host = domain;
-  this.token = null;
+  this.token = token;
+  this.sid = null;
   this.client_id = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
 
@@ -38,9 +44,8 @@ function Retsly (client_id, options) {
   });
 
   this.io.on('connect', function() {
-    debug('<-- Connected to Retsly!');
+    debug('<-- Connected to Retsly Sockets!');
     // try to establish a session, then connect
-    if(_attempts === 0) this.session(this.connect.bind(this));
   }.bind(this))
 
   // if we disconnect, try to reconnet
@@ -52,6 +57,9 @@ function Retsly (client_id, options) {
   this.io.on('reconnect_failed', function() {
     this.ready();
   }.bind(this))
+
+  if(_attempts === 0)
+    this.session(this.connect.bind(this));
 
   this.css();
 
@@ -67,12 +75,13 @@ Retsly.debug = false;
  * @return {Retsly}
  * @api public
  */
-Retsly.create = function create (client, opts) {
+Retsly.create = function create (client, token, opts) {
   var s = !arguments.length;
+  token = token || _token;
   client = client || _client;
   opts = opts || _opts;
   if (!s && !client) throw new Error('call Retsly.create() with client id and options');
-  return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, opts));
+  return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, token, opts));
 }
 
 /**
@@ -80,6 +89,14 @@ Retsly.create = function create (client, opts) {
  */
 Retsly.client = function (id) {
   _client = id;
+  return Retsly;
+}
+
+/**
+ * Set Retsly Token
+ */
+Retsly.token = function(token) {
+  _token = token;
   return Retsly;
 }
 
@@ -107,44 +124,52 @@ Retsly.prototype.css = function() {
 
 };
 
-Retsly.prototype.connect = function(sid) {
-  var self = this;
+Retsly.prototype.connect = function(rsid) {
 
+  // force multiple connections if cookie not set
+  // but only attempt to connect 3 times then continue on
   if(_attempts > 2) return this.ready();
 
   debug('--> Requesting Retsly Session...', { attempts: _attempts });
 
   // on first try, express will not be able to return a sid
-  if(sid === 'false') return this.session(this.connect.bind(this));
+  this.sid = rsid;
+
+  // on first try, express will not be able to return a sid
+  if(rsid === 'false')
+    return this.session(this.connect.bind(this));
 
   // session sid established, syncing cookie
-  setCookie('retsly.sid', encodeURIComponent(sid));
-  debug('<-- Retsly Session Established!', { sid: sid });
+  setCookie('retsly.sid', encodeURIComponent(rsid));
+  debug('<-- Retsly Session Established!', { rsid: rsid, sid: this.sid });
 
   // tell retsly.io to listen to session
-  this.io.emit('authorize', { sid: sid });
+  this.io.emit('session', { sid: rsid });
 
   this.ready();
 
 };
 
 Retsly.prototype.session = function(cb) {
-
+  cb = cb || function() {};
   _attempts++;
 
   ajax({
-    type: 'POST',
-    data: { origin: getOrigin(), action: 'set' },
+    type: 'GET',
     url: this.getURL('session'),
-    xhrFields: { withCredentials: true },
+    data: { origin: getOrigin() },
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
+    crossDomain : true,
     error: function (xhr,err) {
       this.ready();
       throw new Error('Could not set Retsly session');
     }.bind(this),
-    success: cb.bind(this)
+    success: function(res, status, xhr) {
+      var sid = xhr.getResponseHeader('Retsly-Scope');
+      cb(sid);
+    }
   });
 
 };
@@ -155,17 +180,19 @@ Retsly.prototype.session = function(cb) {
 Retsly.prototype.logout = function(cb) {
   cb = cb || function() {};
   ajax({
-    type: 'POST',
-    xhrFields: { withCredentials: true },
+    type: 'DELETE',
+    url: this.getURL('session')+'?origin='+getOrigin(),
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
-    data: { origin: getOrigin(), action: 'del' },
-    url: this.getURL('session'),
-    error: function (error) {
+    crossDomain : true,
+    error: function(error) {
       throw new Error('Could not delete Retsly session');
     },
-    success: cb.bind(this)
+    success: function(res, status, xhr) {
+      var sid = xhr.getResponseHeader('Retsly-Scope');
+      cb(sid);
+    }
   });
   return this;
 };
@@ -255,27 +282,52 @@ Retsly.prototype.request = function(method, url, query, cb) {
     cb = query;
     query = {};
   }
+
   query = query || {};
   debug('%s --> %s', method, url, query);
 
   var options = {};
   options.query = {};
-  if ('get' == method) options.query = query;
-  else options.body = query;
+  options.body = {};
+
   options.method = method;
   options.url = url;
+  options.query.client_id = this.client_id;
+
+  if ('post' == method) options.body = query;
+  else options.query = query;
 
   var token = this.getToken();
   if(token) options.query.access_token = token;
-  options.query.client_id = this.client_id;
 
-  this.io.emit('api', options, function(res) {
+  var resource = url+'?'+params.stringify(options.query);
+
+  ajax({
+    type: method.toUpperCase(),
+    dataType: 'json',
+    data: options.body,
+    url: resource,
+    xhrFields: { withCredentials: true },
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
+    error: function(res, status, xhr) {
+      log(method, url, query, res);
+      if(typeof cb === 'function') cb(res);
+    },
+    success: function(res, status, xhr){
+      log(method, url, query, res);
+      if(typeof cb === 'function') cb(res);
+    }
+  });
+
+  function log(method, url, query, res) {
     delete query['client_id'];
     delete query['access_token'];
     debug(method, '<-- ', url, query);
     debug(' |---- response: ', res);
-    if(typeof cb === 'function') cb(res);
-  });
+  }
+
   return this;
 };
 

@@ -7,7 +7,8 @@
     "retsly/socket.io-client": "0.9.16",
     "ForbesLindesay/ajax": "*",
     "segmentio/extend": "*",
-    "component/each": "*"
+    "component/each": "*",
+    "sindresorhus/query-string": "*"
   },
   "development": {
     "timoxley/assert": "*",
