@@ -141,7 +141,7 @@ Retsly.prototype.connect = function(rsid) {
 
   // session sid established, syncing cookie
   setCookie('retsly.sid', encodeURIComponent(rsid));
-  debug('<-- Retsly Session Established!', { rsid: rsid, sid: this.sid });
+  debug('<-- Retsly Session Established!', { sid: this.sid });
 
   // tell retsly.io to listen to session
   this.io.emit('session', { sid: rsid });
