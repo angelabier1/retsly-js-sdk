@@ -8,7 +8,7 @@
     "ForbesLindesay/ajax": "*",
     "segmentio/extend": "*",
     "component/each": "*",
-    "component/querystring": "*"
+    "visionmedia/node-querystring": "*"
   },
   "development": {
     "timoxley/assert": "*",

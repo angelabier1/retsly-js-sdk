@@ -136,8 +136,7 @@ Retsly.prototype.connect = function(rsid) {
   this.sid = rsid;
 
   // on first try, express will not be able to return a sid
-  if(rsid === 'false')
-    return this.session(this.connect.bind(this));
+  if(rsid === 'false') return this.session(this.connect.bind(this));
 
   // session sid established, syncing cookie
   setCookie('retsly.sid', encodeURIComponent(rsid));
@@ -300,9 +299,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
   var token = this.getToken();
   if(token) options.query.access_token = token;
 
-  var endpoint = url + getQuery(options.query);
-
-  console.log(endpoint);
+  var endpoint = url + '?' + getQuery(options.query);
 
   ajax({
     type: method.toUpperCase(),
@@ -333,33 +330,11 @@ Retsly.prototype.request = function(method, url, query, cb) {
   return this;
 };
 
+/**
+ * Returns a Retsly API compatible query string from a JSON object
+ */
 var getQuery = Retsly.prototype.getQuery = function(query) {
-
-  var params = '';
-
-  for(var k in query) {
-
-    if(!!~params.indexOf('?')) params += '&';
-    if(!~params.indexOf('?')) params += '?';
-
-    if(!special(k)) params += k+'='+query[k];
-    if(!special(k)) continue;
-
-    params += k;
-
-    for(i in query[k])
-      params+= '['+i+']='+escape(JSON.stringify(query[k]));
-  }
-
-  function special(o) {
-    return ~o.indexOf('$') && iterable(query[o]);
-  }
-
-  function iterable(o) {
-    return typeof o === 'object' || typeof o === 'array';
-  }
-
-  return params;
+  return decodeURIComponent( qs(query) );
 };
 
 /**
