@@ -4076,6 +4076,7 @@ if (typeof define === "function" && define.amd) {
 })();
 });
 require.register("component-type/index.js", function(exports, require, module){
+
 /**
  * toString ref.
  */
@@ -4092,23 +4093,22 @@ var toString = Object.prototype.toString;
 
 module.exports = function(val){
   switch (toString.call(val)) {
+    case '[object Function]': return 'function';
     case '[object Date]': return 'date';
     case '[object RegExp]': return 'regexp';
     case '[object Arguments]': return 'arguments';
     case '[object Array]': return 'array';
-    case '[object Error]': return 'error';
+    case '[object String]': return 'string';
   }
 
   if (val === null) return 'null';
   if (val === undefined) return 'undefined';
-  if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
-
-  val = val.valueOf
-    ? val.valueOf()
-    : Object.prototype.valueOf.apply(val)
+  if (val === Object(val)) return 'object';
 
   return typeof val;
+};
+turn typeof val;
 };
 
 });
@@ -4511,11 +4511,17 @@ function prefixed(str) {
 
 });
 require.register("component-to-function/index.js", function(exports, require, module){
+
 /**
  * Module Dependencies
  */
 
-var expr = require('props');
+var expr;
+try {
+  expr = require('props');
+} catch(e) {
+  expr = require('component-props');
+}
 
 /**
  * Expose `toFunction()`.
@@ -4557,7 +4563,7 @@ function toFunction(obj) {
 function defaultToFunction(val) {
   return function(obj){
     return val === obj;
-  }
+  };
 }
 
 /**
@@ -4571,7 +4577,7 @@ function defaultToFunction(val) {
 function regexpToFunction(re) {
   return function(obj){
     return re.test(obj);
-  }
+  };
 }
 
 /**
@@ -4599,11 +4605,11 @@ function stringToFunction(str) {
  */
 
 function objectToFunction(obj) {
-  var match = {}
+  var match = {};
   for (var key in obj) {
     match[key] = typeof obj[key] === 'string'
       ? defaultToFunction(obj[key])
-      : toFunction(obj[key])
+      : toFunction(obj[key]);
   }
   return function(val){
     if (typeof val !== 'object') return false;
@@ -4612,7 +4618,7 @@ function objectToFunction(obj) {
       if (!match[key](val[key])) return false;
     }
     return true;
-  }
+  };
 }
 
 /**
@@ -4627,14 +4633,35 @@ function get(str) {
   var props = expr(str);
   if (!props.length) return '_.' + str;
 
-  var val;
-  for(var i = 0, prop; prop = props[i]; i++) {
+  var val, i, prop;
+  for (i = 0; i < props.length; i++) {
+    prop = props[i];
     val = '_.' + prop;
     val = "('function' == typeof " + val + " ? " + val + "() : " + val + ")";
-    str = str.replace(new RegExp(prop, 'g'), val);
+
+    // mimic negative lookbehind to avoid problems with nested properties
+    str = stripNested(prop, str, val);
   }
 
   return str;
+}
+
+/**
+ * Mimic negative lookbehind to avoid problems with nested properties.
+ *
+ * See: http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
+ *
+ * @param {String} prop
+ * @param {String} str
+ * @param {String} val
+ * @return {String}
+ * @api private
+ */
+
+function stripNested (prop, str, val) {
+  return str.replace(new RegExp('(\\.)?' + prop, 'g'), function($0, $1) {
+    return $1 ? $0 : val;
+  });
 }
 
 });
@@ -4725,6 +4752,75 @@ function array(obj, fn, ctx) {
 }
 
 });
+require.register("sindresorhus-query-string/query-string.js", function(exports, require, module){
+/*!
+	query-string
+	Parse and stringify URL query strings
+	https://github.com/sindresorhus/query-string
+	by Sindre Sorhus
+	MIT License
+*/
+(function () {
+	'use strict';
+	var queryString = {};
+
+	queryString.parse = function (str) {
+		if (typeof str !== 'string') {
+			return {};
+		}
+
+		str = str.trim().replace(/^(\?|#)/, '');
+
+		if (!str) {
+			return {};
+		}
+
+		return str.trim().split('&').reduce(function (ret, param) {
+			var parts = param.replace(/\+/g, ' ').split('=');
+			var key = parts[0];
+			var val = parts[1];
+
+			key = decodeURIComponent(key);
+			// missing `=` should be `null`:
+			// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
+			val = val === undefined ? null : decodeURIComponent(val);
+
+			if (!ret.hasOwnProperty(key)) {
+				ret[key] = val;
+			} else if (Array.isArray(ret[key])) {
+				ret[key].push(val);
+			} else {
+				ret[key] = [ret[key], val];
+			}
+
+			return ret;
+		}, {});
+	};
+
+	queryString.stringify = function (obj) {
+		return obj ? Object.keys(obj).map(function (key) {
+			var val = obj[key];
+
+			if (Array.isArray(val)) {
+				return val.map(function (val2) {
+					return encodeURIComponent(key) + '=' + encodeURIComponent(val2);
+				}).join('&');
+			}
+
+			return encodeURIComponent(key) + '=' + encodeURIComponent(val);
+		}).join('&') : '';
+	};
+
+	if (typeof define === 'function' && define.amd) {
+		define([], queryString);
+	} else if (typeof module !== 'undefined' && module.exports) {
+		module.exports = queryString;
+	} else {
+		window.queryString = queryString;
+	}
+})();
+
+});
 require.register("retsly-sdk/index.js", function(exports, require, module){
 
 /**
@@ -4734,29 +4830,35 @@ var extend = require('extend');
 var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
+var params = require('query-string')
 
 module.exports = Retsly;
 
-var _retsly, _client, _opts;
+var _retsly, _client, _opts, _token, _attempts = 0;
 
 /**
  * Core SDK
  */
-function Retsly (client_id, options) {
+function Retsly (client_id, token, options) {
+
+  if (!token)
+    throw new Error('You must provide a browser token - ie: new Retsly(\'client_id\', \'token\');');
+
   if (!client_id)
-    throw new Error('You must provide a client_id - ie: new Retsly(\'xxx\');');
+    throw new Error('You must provide a client_id - ie: new Retsly(\'client_id\', \'token\');');
 
   var domain = this.getDomain();
 
   this.host = domain;
-  this.token = null;
+  this.token = token;
+  this.sid = null;
   this.client_id = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
 
   this.__init_stack = [];
   _retsly = this;
 
-  this.init();
+  debug('--> Connecting to Retsly...');
 
   // set up socket.io connection
   this.io = io.connect(getDomain(), {
@@ -4765,11 +4867,26 @@ function Retsly (client_id, options) {
     'max reconnection attempts': Infinity // defaults to 10
   });
 
+  this.io.on('connect', function() {
+    debug('<-- Connected to Retsly Sockets!');
+    // try to establish a session, then connect
+  }.bind(this))
+
   // if we disconnect, try to reconnet
   this.io.on('disconnect', function() {
     if(!_retsly.io.socket.connected)
       _retsly.io.socket.reconnect();
   });
+
+  this.io.on('reconnect_failed', function() {
+    this.ready();
+  }.bind(this))
+
+  if(_attempts === 0)
+    this.session(this.connect.bind(this));
+
+  this.css();
+
 }
 
 /**
@@ -4782,12 +4899,13 @@ Retsly.debug = false;
  * @return {Retsly}
  * @api public
  */
-Retsly.create = function create (client, opts) {
+Retsly.create = function create (client, token, opts) {
   var s = !arguments.length;
+  token = token || _token;
   client = client || _client;
   opts = opts || _opts;
   if (!s && !client) throw new Error('call Retsly.create() with client id and options');
-  return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, opts));
+  return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, token, opts));
 }
 
 /**
@@ -4795,6 +4913,14 @@ Retsly.create = function create (client, opts) {
  */
 Retsly.client = function (id) {
   _client = id;
+  return Retsly;
+}
+
+/**
+ * Set Retsly Token
+ */
+Retsly.token = function(token) {
+  _token = token;
   return Retsly;
 }
 
@@ -4807,11 +4933,9 @@ Retsly.options = function (opts) {
 }
 
 /**
- * Initialze Retsly session
+ * Initialze Retsly CSS
  */
-Retsly.prototype.init = function() {
-  var self = this;
-  debug('--> Loading Retsly SDK...');
+Retsly.prototype.css = function() {
 
   if( document.getElementById('retsly-css-sdk') ) return;
 
@@ -4822,37 +4946,54 @@ Retsly.prototype.init = function() {
     css.href = getDomain()+'/css/sdk'
   document.getElementsByTagName('head')[0].appendChild(css);
 
-  // try to establish a session, then connect
-  this.session(self.connect.bind(this));
 };
 
-Retsly.prototype.connect = function(sid) {
-  var self = this;
+Retsly.prototype.connect = function(rsid) {
+
+  // force multiple connections if cookie not set
+  // but only attempt to connect 3 times then continue on
+  if(_attempts > 2) return this.ready();
+
+  debug('--> Requesting Retsly Session...', { attempts: _attempts });
 
   // on first try, express will not be able to return a sid
-  if(sid === 'false') return this.session(self.connect.bind(this));
+  this.sid = rsid;
 
-  // sync user sid cookie over sockets
-  this.io.emit('authorize', { sid: sid }, function(data) {
-    if(typeof data.bundle === 'string') setCookie('retsly.sid', encodeURIComponent(data.bundle));
-    debug('<-- Retsly SDK Loaded!');
-    this.ready();
-  }.bind(this));
+  // on first try, express will not be able to return a sid
+  if(rsid === 'false')
+    return this.session(this.connect.bind(this));
+
+  // session sid established, syncing cookie
+  setCookie('retsly.sid', encodeURIComponent(rsid));
+  debug('<-- Retsly Session Established!', { sid: this.sid });
+
+  // tell retsly.io to listen to session
+  this.io.emit('session', { sid: rsid });
+
+  this.ready();
 
 };
 
 Retsly.prototype.session = function(cb) {
+  cb = cb || function() {};
+  _attempts++;
 
   ajax({
-    type: 'POST',
-    data: { origin: getOrigin(), action: 'set' },
+    type: 'GET',
     url: this.getURL('session'),
-    xhrFields: { withCredentials: true },
+    data: { origin: getOrigin() },
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
-    error: function (xhr,err) { throw new Error(err) },
-    success: cb.bind(this)
+    crossDomain : true,
+    error: function (xhr,err) {
+      this.ready();
+      throw new Error('Could not set Retsly session');
+    }.bind(this),
+    success: function(res, status, xhr) {
+      var sid = xhr.getResponseHeader('Retsly-Scope');
+      cb(sid);
+    }
   });
 
 };
@@ -4863,15 +5004,19 @@ Retsly.prototype.session = function(cb) {
 Retsly.prototype.logout = function(cb) {
   cb = cb || function() {};
   ajax({
-    type: 'POST',
-    xhrFields: { withCredentials: true },
+    type: 'DELETE',
+    url: this.getURL('session')+'?origin='+getOrigin(),
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
-    data: { origin: getOrigin(), action: 'del' },
-    url: this.getURL('session'),
-    error: function (error) { throw new Error(error); },
-    success: cb
+    crossDomain : true,
+    error: function(error) {
+      throw new Error('Could not delete Retsly session');
+    },
+    success: function(res, status, xhr) {
+      var sid = xhr.getResponseHeader('Retsly-Scope');
+      cb(sid);
+    }
   });
   return this;
 };
@@ -4918,6 +5063,7 @@ Retsly.prototype.getURL = function (url) {
 Retsly.prototype.ready = function(cb) {
   if (cb) this.__init_stack.push(cb);
   else each(this.__init_stack, function(c) { if(typeof c === 'function') c(); });
+  if(!cb) this.__init_stack = []; //clear stack
   return this;
 };
 
@@ -4960,27 +5106,52 @@ Retsly.prototype.request = function(method, url, query, cb) {
     cb = query;
     query = {};
   }
+
   query = query || {};
   debug('%s --> %s', method, url, query);
 
   var options = {};
   options.query = {};
-  if ('get' == method) options.query = query;
-  else options.body = query;
+  options.body = {};
+
   options.method = method;
   options.url = url;
+  options.query.client_id = this.client_id;
+
+  if ('post' == method) options.body = query;
+  else options.query = query;
 
   var token = this.getToken();
   if(token) options.query.access_token = token;
-  options.query.client_id = this.client_id;
 
-  this.io.emit('api', options, function(res) {
+  var resource = url+'?'+params.stringify(options.query);
+
+  ajax({
+    type: method.toUpperCase(),
+    dataType: 'json',
+    data: options.body,
+    url: resource,
+    xhrFields: { withCredentials: true },
+    beforeSend: function(xhr) {
+      xhr.withCredentials = true;
+    },
+    error: function(res, status, xhr) {
+      log(method, url, query, res);
+      if(typeof cb === 'function') cb(res);
+    },
+    success: function(res, status, xhr){
+      log(method, url, query, res);
+      if(typeof cb === 'function') cb(res);
+    }
+  });
+
+  function log(method, url, query, res) {
     delete query['client_id'];
     delete query['access_token'];
     debug(method, '<-- ', url, query);
     debug(' |---- response: ', res);
-    if(typeof cb === 'function') cb(res);
-  });
+  }
+
   return this;
 };
 
@@ -5046,6 +5217,8 @@ function debug () {
 
 
 
+
+
 require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/socket.io/dist/socket.io.js");
 require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/socket.io/index.js");
 require.alias("retsly-socket.io-client/dist/socket.io.js", "socket.io/index.js");
@@ -5059,11 +5232,15 @@ require.alias("segmentio-extend/index.js", "extend/index.js");
 
 require.alias("component-each/index.js", "retsly-sdk/deps/each/index.js");
 require.alias("component-each/index.js", "each/index.js");
+require.alias("component-type/index.js", "component-each/deps/type/index.js");
+
 require.alias("component-to-function/index.js", "component-each/deps/to-function/index.js");
 require.alias("component-props/index.js", "component-to-function/deps/props/index.js");
 
-require.alias("component-type/index.js", "component-each/deps/type/index.js");
-
+require.alias("sindresorhus-query-string/query-string.js", "retsly-sdk/deps/query-string/query-string.js");
+require.alias("sindresorhus-query-string/query-string.js", "retsly-sdk/deps/query-string/index.js");
+require.alias("sindresorhus-query-string/query-string.js", "query-string/index.js");
+require.alias("sindresorhus-query-string/query-string.js", "sindresorhus-query-string/index.js");
 require.alias("retsly-sdk/index.js", "retsly-sdk/index.js");if (typeof exports == "object") {
   module.exports = require("retsly-sdk");
 } else if (typeof define == "function" && define.amd) {

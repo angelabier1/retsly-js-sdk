@@ -20,19 +20,19 @@ test('is a constructor', function () {
   assert('function' == typeof Retsly);
 });
 
-test('expects two arguments', function () {
-  assert(2 == Retsly.length);
+test('expects three arguments', function () {
+  assert(3 == Retsly.length);
   assert.throws(function(){new Retsly()});
-  assert.ok(new Retsly('test'));
+  assert.ok(new Retsly('test', 'test'));
 });
 
 test('has public options property', function () {
-  var r = new Retsly('test', {foo: 'bar'});
+  var r = new Retsly('test', 'test', {foo: 'bar'});
   assert('bar' == r.options.foo);
 });
 
 test('has a socket.io connection', function () {
-  var r = new Retsly('test');
+  var r = new Retsly('test', 'test');
   assert(r.io);
 });
 
@@ -43,12 +43,13 @@ suite('Retsly.create()');
 test('setup is chainable', function () {
   Retsly
     .client('test')
+    .token('test')
     .options({foo:true})
     .create();
 });
 
 test('returns original instance', function () {
-  var r1 = new Retsly('original');
+  var r1 = new Retsly('original', 'test');
   var r2 = Retsly.create();
   assert(r2.getClient() === 'original');
   assert(r2 === r1);
@@ -65,7 +66,7 @@ test('returns same instance each call', function () {
 
 test('pass new args to replace', function () {
   var r = Retsly.create();
-  var s = Retsly.create('foo', {foo:false});
+  var s = Retsly.create('foo', 'test', {foo:false});
   var t = Retsly.create();
 
   assert.notEqual(r, s);
@@ -76,7 +77,7 @@ test('pass new args to replace', function () {
 suite('Retsly#getURL()');
 
 test('builds URLs from fragments', function () {
-  var r = new Retsly('test');
+  var r = new Retsly('test','test');
   assert(r.getDomain()+'/api/v1/test' == r.getURL('test'));
 });
 
@@ -86,42 +87,23 @@ suite('Retsly#ready()');
 test('calls all functions passed', function (done) {
   var i = 0;
   var fn = function () { i++; if (2==i) done() };
-  var r = new Retsly('test');
+  var r = new Retsly('test','test');
   r.ready(fn)
    .ready(fn)
    .ready();
 });
 
 test('is chainable', function () {
-  var r = new Retsly('test')
+  var r = new Retsly('test','test')
     .ready(noop)
     .ready(noop);
   assert(r instanceof Retsly);
 });
 
-/*
- *
- *suite('Retsly#request()');
- *
- *test('calls back with a response', function (done) {
- *  var r = new Retsly('test').ready(ready);
- *
- *  function ready () {
- *    r.request('get', '/api/v1/listings/sandicor.json', cb);
- *  }
- *
- *  function cb (res) {
- *    assert(401 == res.status);
- *    assert(false === res.success);
- *    done();
- *  }
- *});
- */
-
 test('is chainable', function () {
-  var r = new Retsly('test')
-    .get('test', noop)
-    .post('test2', noop);
+  var r = new Retsly('test','test')
+    .get('test.html', noop)
+    .post('test.html', noop);
   assert(r instanceof Retsly);
 });
 
@@ -129,19 +111,8 @@ test('is chainable', function () {
 suite('Retsly#logout()');
 
 test('is chainable', function () {
-  var r = new Retsly('test')
+  var r = new Retsly('test','test')
     .logout(noop);
   assert(r instanceof Retsly);
 });
 
-/*
- *test('destroys session and calls cb', function (done) {
- *  var r = new Retsly('test').ready(ready);
- *  function ready () {
- *    r.logout(function () {
- *      assert(true);
- *      done();
- *    });
- *  }
- *});
- */
