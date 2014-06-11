@@ -8,7 +8,7 @@
     "ForbesLindesay/ajax": "*",
     "segmentio/extend": "*",
     "component/each": "*",
-    "sindresorhus/query-string": "*"
+    "component/querystring": "*"
   },
   "development": {
     "timoxley/assert": "*",
@@ -16,5 +16,7 @@
   },
   "license": "MIT",
   "main": "index.js",
-  "scripts": ["index.js"]
+  "scripts": [
+    "index.js"
+  ]
 }

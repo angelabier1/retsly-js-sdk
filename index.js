@@ -6,7 +6,7 @@ var extend = require('extend');
 var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
-var params = require('query-string')
+var qs = require('querystring').stringify;
 
 module.exports = Retsly;
 
@@ -300,13 +300,15 @@ Retsly.prototype.request = function(method, url, query, cb) {
   var token = this.getToken();
   if(token) options.query.access_token = token;
 
-  var resource = url+'?'+params.stringify(options.query);
+  var endpoint = url + getQuery(options.query);
+
+  console.log(endpoint);
 
   ajax({
     type: method.toUpperCase(),
     dataType: 'json',
     data: options.body,
-    url: resource,
+    url: endpoint,
     xhrFields: { withCredentials: true },
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
@@ -329,6 +331,35 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   return this;
+};
+
+var getQuery = Retsly.prototype.getQuery = function(query) {
+
+  var params = '';
+
+  for(var k in query) {
+
+    if(!!~params.indexOf('?')) params += '&';
+    if(!~params.indexOf('?')) params += '?';
+
+    if(!special(k)) params += k+'='+query[k];
+    if(!special(k)) continue;
+
+    params += k;
+
+    for(i in query[k])
+      params+= '['+i+']='+escape(JSON.stringify(query[k]));
+  }
+
+  function special(o) {
+    return ~o.indexOf('$') && iterable(query[o]);
+  }
+
+  function iterable(o) {
+    return typeof o === 'object' || typeof o === 'array';
+  }
+
+  return params;
 };
 
 /**
