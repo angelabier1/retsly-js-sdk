@@ -4752,73 +4752,373 @@ function array(obj, fn, ctx) {
 }
 
 });
-require.register("sindresorhus-query-string/query-string.js", function(exports, require, module){
-/*!
-	query-string
-	Parse and stringify URL query strings
-	https://github.com/sindresorhus/query-string
-	by Sindre Sorhus
-	MIT License
-*/
-(function () {
-	'use strict';
-	var queryString = {};
+require.register("visionmedia-node-querystring/index.js", function(exports, require, module){
+/**
+ * Object#toString() ref for stringify().
+ */
 
-	queryString.parse = function (str) {
-		if (typeof str !== 'string') {
-			return {};
-		}
+var toString = Object.prototype.toString;
 
-		str = str.trim().replace(/^(\?|#)/, '');
+/**
+ * Object#hasOwnProperty ref
+ */
 
-		if (!str) {
-			return {};
-		}
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-		return str.trim().split('&').reduce(function (ret, param) {
-			var parts = param.replace(/\+/g, ' ').split('=');
-			var key = parts[0];
-			var val = parts[1];
+/**
+ * Array#indexOf shim.
+ */
 
-			key = decodeURIComponent(key);
-			// missing `=` should be `null`:
-			// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
-			val = val === undefined ? null : decodeURIComponent(val);
+var indexOf = typeof Array.prototype.indexOf === 'function'
+  ? function(arr, el) { return arr.indexOf(el); }
+  : function(arr, el) {
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i] === el) return i;
+      }
+      return -1;
+    };
 
-			if (!ret.hasOwnProperty(key)) {
-				ret[key] = val;
-			} else if (Array.isArray(ret[key])) {
-				ret[key].push(val);
-			} else {
-				ret[key] = [ret[key], val];
-			}
+/**
+ * Array.isArray shim.
+ */
 
-			return ret;
-		}, {});
-	};
+var isArray = Array.isArray || function(arr) {
+  return toString.call(arr) == '[object Array]';
+};
 
-	queryString.stringify = function (obj) {
-		return obj ? Object.keys(obj).map(function (key) {
-			var val = obj[key];
+/**
+ * Object.keys shim.
+ */
 
-			if (Array.isArray(val)) {
-				return val.map(function (val2) {
-					return encodeURIComponent(key) + '=' + encodeURIComponent(val2);
-				}).join('&');
-			}
+var objectKeys = Object.keys || function(obj) {
+  var ret = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      ret.push(key);
+    }
+  }
+  return ret;
+};
 
-			return encodeURIComponent(key) + '=' + encodeURIComponent(val);
-		}).join('&') : '';
-	};
+/**
+ * Array#forEach shim.
+ */
 
-	if (typeof define === 'function' && define.amd) {
-		define([], queryString);
-	} else if (typeof module !== 'undefined' && module.exports) {
-		module.exports = queryString;
-	} else {
-		window.queryString = queryString;
-	}
-})();
+var forEach = typeof Array.prototype.forEach === 'function'
+  ? function(arr, fn) { return arr.forEach(fn); }
+  : function(arr, fn) {
+      for (var i = 0; i < arr.length; i++) fn(arr[i]);
+    };
+
+/**
+ * Array#reduce shim.
+ */
+
+var reduce = function(arr, fn, initial) {
+  if (typeof arr.reduce === 'function') return arr.reduce(fn, initial);
+  var res = initial;
+  for (var i = 0; i < arr.length; i++) res = fn(res, arr[i]);
+  return res;
+};
+
+/**
+ * Cache non-integer test regexp.
+ */
+
+var isint = /^[0-9]+$/;
+
+function promote(parent, key) {
+  if (parent[key].length == 0) return parent[key] = {}
+  var t = {};
+  for (var i in parent[key]) {
+    if (hasOwnProperty.call(parent[key], i)) {
+      t[i] = parent[key][i];
+    }
+  }
+  parent[key] = t;
+  return t;
+}
+
+function parse(parts, parent, key, val) {
+  var part = parts.shift();
+
+  // illegal
+  if (hasOwnProperty.call(Object.prototype, key)) return;
+
+  // end
+  if (!part) {
+    if (isArray(parent[key])) {
+      parent[key].push(val);
+    } else if ('object' == typeof parent[key]) {
+      parent[key] = val;
+    } else if ('undefined' == typeof parent[key]) {
+      parent[key] = val;
+    } else {
+      parent[key] = [parent[key], val];
+    }
+    // array
+  } else {
+    var obj = parent[key] = parent[key] || [];
+    if (']' == part) {
+      if (isArray(obj)) {
+        if ('' != val) obj.push(val);
+      } else if ('object' == typeof obj) {
+        obj[objectKeys(obj).length] = val;
+      } else {
+        obj = parent[key] = [parent[key], val];
+      }
+      // prop
+    } else if (~indexOf(part, ']')) {
+      part = part.substr(0, part.length - 1);
+      if (!isint.test(part) && isArray(obj)) obj = promote(parent, key);
+      parse(parts, obj, part, val);
+      // key
+    } else {
+      if (!isint.test(part) && isArray(obj)) obj = promote(parent, key);
+      parse(parts, obj, part, val);
+    }
+  }
+}
+
+/**
+ * Merge parent key/val pair.
+ */
+
+function merge(parent, key, val){
+  if (~indexOf(key, ']')) {
+    var parts = key.split('[')
+      , len = parts.length
+      , last = len - 1;
+    parse(parts, parent, 'base', val);
+    // optimize
+  } else {
+    if (!isint.test(key) && isArray(parent.base)) {
+      var t = {};
+      for (var k in parent.base) t[k] = parent.base[k];
+      parent.base = t;
+    }
+    set(parent.base, key, val);
+  }
+
+  return parent;
+}
+
+/**
+ * Compact sparse arrays.
+ */
+
+function compact(obj) {
+  if ('object' != typeof obj) return obj;
+
+  if (isArray(obj)) {
+    var ret = [];
+
+    for (var i in obj) {
+      if (hasOwnProperty.call(obj, i)) {
+        ret.push(obj[i]);
+      }
+    }
+
+    return ret;
+  }
+
+  for (var key in obj) {
+    obj[key] = compact(obj[key]);
+  }
+
+  return obj;
+}
+
+/**
+ * Parse the given obj.
+ */
+
+function parseObject(obj){
+  var ret = { base: {} };
+
+  forEach(objectKeys(obj), function(name){
+    merge(ret, name, obj[name]);
+  });
+
+  return compact(ret.base);
+}
+
+/**
+ * Parse the given str.
+ */
+
+function parseString(str){
+  var ret = reduce(String(str).split('&'), function(ret, pair){
+    var eql = indexOf(pair, '=')
+      , brace = lastBraceInKey(pair)
+      , key = pair.substr(0, brace || eql)
+      , val = pair.substr(brace || eql, pair.length)
+      , val = val.substr(indexOf(val, '=') + 1, val.length);
+
+    // ?foo
+    if ('' == key) key = pair, val = '';
+    if ('' == key) return ret;
+
+    return merge(ret, decode(key), decode(val));
+  }, { base: {} }).base;
+
+  return compact(ret);
+}
+
+/**
+ * Parse the given query `str` or `obj`, returning an object.
+ *
+ * @param {String} str | {Object} obj
+ * @return {Object}
+ * @api public
+ */
+
+exports.parse = function(str){
+  if (null == str || '' == str) return {};
+  return 'object' == typeof str
+    ? parseObject(str)
+    : parseString(str);
+};
+
+/**
+ * Turn the given `obj` into a query string
+ *
+ * @param {Object} obj
+ * @return {String}
+ * @api public
+ */
+
+var stringify = exports.stringify = function(obj, prefix) {
+  if (isArray(obj)) {
+    return stringifyArray(obj, prefix);
+  } else if ('[object Object]' == toString.call(obj)) {
+    return stringifyObject(obj, prefix);
+  } else if ('string' == typeof obj) {
+    return stringifyString(obj, prefix);
+  } else {
+    return prefix + '=' + encodeURIComponent(String(obj));
+  }
+};
+
+/**
+ * Stringify the given `str`.
+ *
+ * @param {String} str
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyString(str, prefix) {
+  if (!prefix) throw new TypeError('stringify expects an object');
+  return prefix + '=' + encodeURIComponent(str);
+}
+
+/**
+ * Stringify the given `arr`.
+ *
+ * @param {Array} arr
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyArray(arr, prefix) {
+  var ret = [];
+  if (!prefix) throw new TypeError('stringify expects an object');
+  for (var i = 0; i < arr.length; i++) {
+    ret.push(stringify(arr[i], prefix + '[' + i + ']'));
+  }
+  return ret.join('&');
+}
+
+/**
+ * Stringify the given `obj`.
+ *
+ * @param {Object} obj
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyObject(obj, prefix) {
+  var ret = []
+    , keys = objectKeys(obj)
+    , key;
+
+  for (var i = 0, len = keys.length; i < len; ++i) {
+    key = keys[i];
+    if ('' == key) continue;
+    if (null == obj[key]) {
+      ret.push(encodeURIComponent(key) + '=');
+    } else {
+      ret.push(stringify(obj[key], prefix
+        ? prefix + '[' + encodeURIComponent(key) + ']'
+        : encodeURIComponent(key)));
+    }
+  }
+
+  return ret.join('&');
+}
+
+/**
+ * Set `obj`'s `key` to `val` respecting
+ * the weird and wonderful syntax of a qs,
+ * where "foo=bar&foo=baz" becomes an array.
+ *
+ * @param {Object} obj
+ * @param {String} key
+ * @param {String} val
+ * @api private
+ */
+
+function set(obj, key, val) {
+  var v = obj[key];
+  if (hasOwnProperty.call(Object.prototype, key)) return;
+  if (undefined === v) {
+    obj[key] = val;
+  } else if (isArray(v)) {
+    v.push(val);
+  } else {
+    obj[key] = [v, val];
+  }
+}
+
+/**
+ * Locate last brace in `str` within the key.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function lastBraceInKey(str) {
+  var len = str.length
+    , brace
+    , c;
+  for (var i = 0; i < len; ++i) {
+    c = str[i];
+    if (']' == c) brace = false;
+    if ('[' == c) brace = true;
+    if ('=' == c && !brace) return i;
+  }
+}
+
+/**
+ * Decode `str`.
+ *
+ * @param {String} str
+ * @return {String}
+ * @api private
+ */
+
+function decode(str) {
+  try {
+    return decodeURIComponent(str.replace(/\+/g, ' '));
+  } catch (err) {
+    return str;
+  }
+}
 
 });
 require.register("retsly-sdk/index.js", function(exports, require, module){
@@ -4830,7 +5130,7 @@ var extend = require('extend');
 var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
-var params = require('query-string')
+var qs = require('querystring').stringify;
 
 module.exports = Retsly;
 
@@ -4960,8 +5260,7 @@ Retsly.prototype.connect = function(rsid) {
   this.sid = rsid;
 
   // on first try, express will not be able to return a sid
-  if(rsid === 'false')
-    return this.session(this.connect.bind(this));
+  if(rsid === 'false') return this.session(this.connect.bind(this));
 
   // session sid established, syncing cookie
   setCookie('retsly.sid', encodeURIComponent(rsid));
@@ -4991,7 +5290,7 @@ Retsly.prototype.session = function(cb) {
       throw new Error('Could not set Retsly session');
     }.bind(this),
     success: function(res, status, xhr) {
-      var sid = xhr.getResponseHeader('Retsly-Scope');
+      var sid = xhr.getResponseHeader('Retsly-Session');
       cb(sid);
     }
   });
@@ -5014,7 +5313,7 @@ Retsly.prototype.logout = function(cb) {
       throw new Error('Could not delete Retsly session');
     },
     success: function(res, status, xhr) {
-      var sid = xhr.getResponseHeader('Retsly-Scope');
+      var sid = xhr.getResponseHeader('Retsly-Session');
       cb(sid);
     }
   });
@@ -5119,20 +5418,20 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.query.client_id = this.client_id;
 
   if ('post' == method) options.body = query;
-  else options.query = query;
+  else options.query = extend(options.query, query);
 
   var token = this.getToken();
   if(token) options.query.access_token = token;
 
-  var resource = url+'?'+params.stringify(options.query);
+  var endpoint = getDomain() + url + '?' + getQuery(options.query);
 
   ajax({
     type: method.toUpperCase(),
     dataType: 'json',
     data: options.body,
-    url: resource,
-    xhrFields: { withCredentials: true },
+    url: endpoint,
     beforeSend: function(xhr) {
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.withCredentials = true;
     },
     error: function(res, status, xhr) {
@@ -5153,6 +5452,13 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   return this;
+};
+
+/**
+ * Returns a Retsly API compatible query string from a JSON object
+ */
+var getQuery = Retsly.prototype.getQuery = function(query) {
+  return decodeURIComponent( qs(query) );
 };
 
 /**
@@ -5237,10 +5543,9 @@ require.alias("component-type/index.js", "component-each/deps/type/index.js");
 require.alias("component-to-function/index.js", "component-each/deps/to-function/index.js");
 require.alias("component-props/index.js", "component-to-function/deps/props/index.js");
 
-require.alias("sindresorhus-query-string/query-string.js", "retsly-sdk/deps/query-string/query-string.js");
-require.alias("sindresorhus-query-string/query-string.js", "retsly-sdk/deps/query-string/index.js");
-require.alias("sindresorhus-query-string/query-string.js", "query-string/index.js");
-require.alias("sindresorhus-query-string/query-string.js", "sindresorhus-query-string/index.js");
+require.alias("visionmedia-node-querystring/index.js", "retsly-sdk/deps/querystring/index.js");
+require.alias("visionmedia-node-querystring/index.js", "querystring/index.js");
+
 require.alias("retsly-sdk/index.js", "retsly-sdk/index.js");if (typeof exports == "object") {
   module.exports = require("retsly-sdk");
 } else if (typeof define == "function" && define.amd) {

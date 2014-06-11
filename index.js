@@ -166,7 +166,7 @@ Retsly.prototype.session = function(cb) {
       throw new Error('Could not set Retsly session');
     }.bind(this),
     success: function(res, status, xhr) {
-      var sid = xhr.getResponseHeader('Retsly-Scope');
+      var sid = xhr.getResponseHeader('Retsly-Session');
       cb(sid);
     }
   });
@@ -189,7 +189,7 @@ Retsly.prototype.logout = function(cb) {
       throw new Error('Could not delete Retsly session');
     },
     success: function(res, status, xhr) {
-      var sid = xhr.getResponseHeader('Retsly-Scope');
+      var sid = xhr.getResponseHeader('Retsly-Session');
       cb(sid);
     }
   });
@@ -294,20 +294,20 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.query.client_id = this.client_id;
 
   if ('post' == method) options.body = query;
-  else options.query = query;
+  else options.query = extend(options.query, query);
 
   var token = this.getToken();
   if(token) options.query.access_token = token;
 
-  var endpoint = url + '?' + getQuery(options.query);
+  var endpoint = getDomain() + url + '?' + getQuery(options.query);
 
   ajax({
     type: method.toUpperCase(),
     dataType: 'json',
     data: options.body,
     url: endpoint,
-    xhrFields: { withCredentials: true },
     beforeSend: function(xhr) {
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.withCredentials = true;
     },
     error: function(res, status, xhr) {
