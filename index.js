@@ -10,7 +10,7 @@ var params = require('query-string')
 
 module.exports = Retsly;
 
-var _retsly, _client, _opts, _attempts = 0;
+var _retsly, _client, _opts, _token, _attempts = 0;
 
 /**
  * Core SDK
