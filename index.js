@@ -276,6 +276,7 @@ Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
 };
 
 Retsly.prototype.request = function(method, url, query, cb) {
+
   // query is optional
   if (undefined === cb && 'function' == typeof query) {
     cb = query;
@@ -293,11 +294,16 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.url = url;
   options.query.client_id = this.client_id;
 
-  if ('post' == method) options.body = query;
-  else options.query = extend(options.query, query);
+  if(this.getToken()) 
+    options.query.access_token = this.getToken();
 
-  var token = this.getToken();
-  if(token) options.query.access_token = token;
+  if('get' === method || 'delete' === method) {
+    options.query = extend(options.query, query);
+  } else if('put' === method || 'post' === method) {
+    delete query['client_id'];
+    delete query['access_token'];
+    options.body = query;
+  }
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
 

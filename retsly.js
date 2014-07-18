@@ -4076,7 +4076,6 @@ if (typeof define === "function" && define.amd) {
 })();
 });
 require.register("component-type/index.js", function(exports, require, module){
-
 /**
  * toString ref.
  */
@@ -4093,33 +4092,32 @@ var toString = Object.prototype.toString;
 
 module.exports = function(val){
   switch (toString.call(val)) {
-    case '[object Function]': return 'function';
     case '[object Date]': return 'date';
     case '[object RegExp]': return 'regexp';
     case '[object Arguments]': return 'arguments';
     case '[object Array]': return 'array';
-    case '[object String]': return 'string';
+    case '[object Error]': return 'error';
   }
 
   if (val === null) return 'null';
   if (val === undefined) return 'undefined';
+  if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
-  if (val === Object(val)) return 'object';
+
+  val = val.valueOf
+    ? val.valueOf()
+    : Object.prototype.valueOf.apply(val)
 
   return typeof val;
 };
-turn typeof val;
-};
 
 });
-require.register("forbeslindesay-ajax/index.js", function(exports, require, module){
+require.register("retsly-ajax/index.js", function(exports, require, module){
 var type
 try {
   type = require('type-of')
 } catch (ex) {
-  //hide from browserify
-  var r = require
-  type = r('type')
+  type = require('type')
 }
 
 var jsonpID = 0,
@@ -4404,6 +4402,7 @@ function extend(target) {
   })
   return target
 }
+
 });
 require.register("segmentio-extend/index.js", function(exports, require, module){
 
@@ -4671,7 +4670,12 @@ require.register("component-each/index.js", function(exports, require, module){
  * Module dependencies.
  */
 
-var type = require('type');
+try {
+  var type = require('type');
+} catch (err) {
+  var type = require('component-type');
+}
+
 var toFunction = require('to-function');
 
 /**
@@ -4947,8 +4951,8 @@ function parseObject(obj){
  * Parse the given str.
  */
 
-function parseString(str){
-  var ret = reduce(String(str).split('&'), function(ret, pair){
+function parseString(str, options){
+  var ret = reduce(String(str).split(options.separator), function(ret, pair){
     var eql = indexOf(pair, '=')
       , brace = lastBraceInKey(pair)
       , key = pair.substr(0, brace || eql)
@@ -4973,11 +4977,13 @@ function parseString(str){
  * @api public
  */
 
-exports.parse = function(str){
+exports.parse = function(str, options){
   if (null == str || '' == str) return {};
+  options = options || {};
+  options.separator = options.separator || '&';
   return 'object' == typeof str
     ? parseObject(str)
-    : parseString(str);
+    : parseString(str, options);
 };
 
 /**
@@ -5400,6 +5406,7 @@ Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
 };
 
 Retsly.prototype.request = function(method, url, query, cb) {
+
   // query is optional
   if (undefined === cb && 'function' == typeof query) {
     cb = query;
@@ -5417,11 +5424,16 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.url = url;
   options.query.client_id = this.client_id;
 
-  if ('post' == method) options.body = query;
-  else options.query = extend(options.query, query);
+  if(this.getToken()) 
+    options.query.access_token = this.getToken();
 
-  var token = this.getToken();
-  if(token) options.query.access_token = token;
+  if('get' === method || 'delete' === method) {
+    options.query = extend(options.query, query);
+  } else if('put' === method || 'post' === method) {
+    delete query['client_id'];
+    delete query['access_token'];
+    options.body = query;
+  }
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
 
@@ -5529,9 +5541,9 @@ require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/sock
 require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-sdk/deps/socket.io/index.js");
 require.alias("retsly-socket.io-client/dist/socket.io.js", "socket.io/index.js");
 require.alias("retsly-socket.io-client/dist/socket.io.js", "retsly-socket.io-client/index.js");
-require.alias("forbeslindesay-ajax/index.js", "retsly-sdk/deps/ajax/index.js");
-require.alias("forbeslindesay-ajax/index.js", "ajax/index.js");
-require.alias("component-type/index.js", "forbeslindesay-ajax/deps/type/index.js");
+require.alias("retsly-ajax/index.js", "retsly-sdk/deps/ajax/index.js");
+require.alias("retsly-ajax/index.js", "ajax/index.js");
+require.alias("component-type/index.js", "retsly-ajax/deps/type/index.js");
 
 require.alias("segmentio-extend/index.js", "retsly-sdk/deps/extend/index.js");
 require.alias("segmentio-extend/index.js", "extend/index.js");
