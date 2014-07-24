@@ -294,7 +294,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.url = url;
   options.query.client_id = this.client_id;
 
-  if(this.getToken()) 
+  if(this.getToken())
     options.query.access_token = this.getToken();
 
   if('get' === method || 'delete' === method) {
@@ -306,12 +306,16 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
+  var data = (options.body && typeof options.body !== 'undefined')
+    ? JSON.stringify(options.body)
+    : '';
 
   ajax({
     type: method.toUpperCase(),
     dataType: 'json',
-    data: options.body,
+    data: data,
     url: endpoint,
+    contentType: 'application/json',
     beforeSend: function(xhr) {
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.withCredentials = true;
@@ -335,6 +339,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
 
   return this;
 };
+
 
 /**
  * Returns a Retsly API compatible query string from a JSON object
