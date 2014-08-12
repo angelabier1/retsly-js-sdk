@@ -91,6 +91,10 @@ separate the logic into individual componets, then require them in your
 `component.json` file. This granularity will promote the reuse of generic
 functionality within the Retsly community.
 
+## Repo Owner
+
+[Jason Wan](http://github.com/jkhwan)
+
 ## License
 
 (The MIT License)
