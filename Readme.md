@@ -27,7 +27,7 @@ $ component install retsly/retsly-js-sdk
 Use with `require`:
 
 ```js
-var Retsly = require('retsly-sdk')
+var Retsly = require('retsly-js-sdk')
 ```
 
 #### Build from source
@@ -59,8 +59,8 @@ for instructions.
 ## Example
 
 ```js
-var retsly = require('retsly-sdk');
-var retsly = new Retsly('YOURCLIENTID');
+var retsly = require('retsly-js-sdk');
+var retsly = new Retsly(YOUR_CLIENT_ID, YOUR_JS_TOKEN);
 retsly.ready(function(){
   retsly.get('/api/v1/listing/sandicor.json', {limit: 10}, function(res){
     if (!res.success) throw new Error(res.bundle);
