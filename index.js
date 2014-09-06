@@ -296,6 +296,8 @@ Retsly.prototype.request = function(method, url, query, cb) {
 
   if(this.getToken())
     options.query.access_token = this.getToken();
+  else
+    return this;
 
   if('get' === method || 'delete' === method) {
     options.query = extend(options.query, query);
