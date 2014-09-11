@@ -5,7 +5,7 @@
   "version": "0.3.2",
   "dependencies": {
     "retsly/socket.io-client": "0.9.16",
-    "retsly/ajax": "0.0.3",
+    "retsly/ajax": "0.0.4",
     "segmentio/extend": "*",
     "component/each": "*",
     "visionmedia/node-querystring": "*"
