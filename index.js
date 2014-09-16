@@ -7,6 +7,7 @@ var io = require('socket.io');
 var ajax = require('ajax');
 var each = require('each');
 var qs = require('querystring').stringify;
+var store = require('store');
 
 module.exports = Retsly;
 
@@ -96,7 +97,7 @@ Retsly.client = function (id) {
  * Set Retsly Token
  */
 Retsly.token = function(token) {
-  _token = token;
+  store('retsly.token', token);
   return Retsly;
 }
 
@@ -143,9 +144,11 @@ Retsly.prototype.connect = function(rsid) {
   debug('<-- Retsly Session Established!', { sid: this.sid });
 
   // tell retsly.io to listen to session
-  this.io.emit('session', { sid: rsid });
-
-  this.ready();
+  this.io.emit('session', { sid: rsid }, function() {
+  // ready needs to be called AFTER sid is exchanged
+  // TODO: @slajax refactor out of sockets!!!!
+    this.ready();
+  }.bind(this));
 
 };
 
@@ -190,8 +193,9 @@ Retsly.prototype.logout = function(cb) {
     },
     success: function(res, status, xhr) {
       var sid = xhr.getResponseHeader('Retsly-Session');
+      this.setToken(null);
       cb(sid);
-    }
+    }.bind(this)
   });
   return this;
 };
@@ -200,7 +204,7 @@ Retsly.prototype.logout = function(cb) {
  * Set an oauth token for extended privileges on current session.
  */
 Retsly.prototype.setToken = function(token) {
-  this.token = token;
+  store('retsly.token', token);
   return this;
 };
 
@@ -208,7 +212,7 @@ Retsly.prototype.setToken = function(token) {
  * Get the oauth token for current session.
  */
 Retsly.prototype.getToken = function() {
-  return this.token;
+  return store('retsly.token');
 };
 
 /**
@@ -308,7 +312,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
-  var data = (options.body && typeof options.body !== 'undefined')
+  var data = (options.body && options.body.length && typeof options.body !== 'undefined')
     ? JSON.stringify(options.body)
     : '';
 
@@ -347,7 +351,9 @@ Retsly.prototype.request = function(method, url, query, cb) {
  * Returns a Retsly API compatible query string from a JSON object
  */
 var getQuery = Retsly.prototype.getQuery = function(query) {
-  return decodeURIComponent( qs(query) );
+  var params = qs(query);
+  if(!params.length) return '';
+  else return decodeURIComponent(params);
 };
 
 /**

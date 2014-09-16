@@ -2,13 +2,14 @@
   "name": "retsly-sdk",
   "repo": "Retsly/retsly-js-sdk",
   "description": "Retsly JavaScript SDK",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "dependencies": {
     "retsly/socket.io-client": "0.9.16",
     "retsly/ajax": "0.0.3",
     "segmentio/extend": "*",
     "component/each": "*",
-    "visionmedia/node-querystring": "*"
+    "visionmedia/node-querystring": "*",
+    "yields/store": "0.2.0"
   },
   "development": {
     "timoxley/assert": "*",
