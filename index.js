@@ -3,7 +3,7 @@
  * Dependencies
  */
 var extend = require('extend');
-var io = require('socket.io');
+var io = window.io;
 var ajax = require('ajax');
 var each = require('each');
 var qs = require('querystring').stringify;
@@ -44,7 +44,7 @@ function Retsly (client_id, token, options) {
     'max reconnection attempts': Infinity // defaults to 10
   });
 
-  this.io.on('connect', function() {
+  this.io.on('connection', function() {
     debug('<-- Connected to Retsly Sockets!');
     // try to establish a session, then connect
   }.bind(this))
@@ -120,10 +120,12 @@ Retsly.prototype.css = function() {
     css.id = 'retsly-css-sdk';
     css.media = 'all';
     css.rel = 'stylesheet';
-    css.href = getDomain()+'/css/sdk'
+    css.href = getDomain()+'/css/sdk/sdk.css'
   document.getElementsByTagName('head')[0].appendChild(css);
 
 };
+  
+var apirouteCallbacks =  {};
 
 Retsly.prototype.connect = function(rsid) {
 
@@ -147,8 +149,39 @@ Retsly.prototype.connect = function(rsid) {
   this.io.emit('session', { sid: rsid }, function() {
   // ready needs to be called AFTER sid is exchanged
   // TODO: @slajax refactor out of sockets!!!!
+  }.bind(this));
+
+  window.exposeSocket = this.io;
+
+
+  this.io.on('sessionResponse', function(){
     this.ready();
   }.bind(this));
+
+  var _this = this;
+
+
+  this.io.apiroute = function apiroute(path,method,args,cb){
+    var data = {path:path,method:method,args:args};
+    apirouteCallbacks[path] = cb;
+    _this.io.emit('api', data);
+    console.log("socket api call : ", data);  
+  };
+
+  _this.io.on('api',function(data){
+    //bind ?
+    apirouteCallbacks[path](data);
+  });
+
+  window.testApi = function(){
+
+    _this.io.apiroute("/api/v1/agent/test.json?access_token=5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW", "GET",
+                    {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"}, 
+                    function(data){
+        console.log("gotdata",data);
+    });
+  }
+
 
 };
 
