@@ -312,7 +312,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
-  var data = (options.body && options.body.length && typeof options.body !== 'undefined')
+  var data = (options.body && typeof options.body !== 'undefined')
     ? JSON.stringify(options.body)
     : '';
 
