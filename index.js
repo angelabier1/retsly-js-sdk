@@ -45,8 +45,6 @@ function Retsly (client_id, token, options) {
   });
 
 
-
-
   this.io.on('connection', function(socket) {
     console.log(socket.join)
     debug('<-- Connected to Retsly Sockets!');
