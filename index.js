@@ -39,11 +39,12 @@ function Retsly (client_id, token, options) {
 
   // set up socket.io connection
   this.io = io.connect(getDomain(), {
-    'reconnection': true,
-    'reconnectionDelay': 3000, // retry every 2 seconds
-    'reconnectionAttempts': 100, // defaults to Infinity
-    'timeout': 4000 // defaults to 10
+    'reconnectionDelay': 5000, // retry every 2 seconds
+    //'reconnection limit': 100, // defaults to Infinity
+    'timeout': 5000 // defaults to 10
   });
+
+
 
 
   this.io.on('connection', function(socket) {
@@ -54,11 +55,11 @@ function Retsly (client_id, token, options) {
 
   // if we disconnect, try to reconnet
   this.io.on('connect_error', function() {
-    console.log("'<-- Error Connection with Retsly Sockets");
+    console.log("Connected error");
   });
 
-  this.io.on('reconnect_error', function() {
-     console.log("'<-- Error Reconnection with Retsly Sockets");
+    this.io.on('reconnect_error', function() {
+    console.log("reconnect_error error");
   });
 
   this.io.on('reconnect_failed', function() {
