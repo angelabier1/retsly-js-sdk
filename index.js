@@ -39,20 +39,26 @@ function Retsly (client_id, token, options) {
 
   // set up socket.io connection
   this.io = io.connect(getDomain(), {
-    'reconnection delay': 5000, // retry every 2 seconds
-    'reconnection limit': 100, // defaults to Infinity
-    'max reconnection attempts': Infinity // defaults to 10
+    'reconnection': true,
+    'reconnectionDelay': 3000, // retry every 2 seconds
+    'reconnectionAttempts': 100, // defaults to Infinity
+    'timeout': 4000 // defaults to 10
   });
 
-  this.io.on('connection', function() {
+
+  this.io.on('connection', function(socket) {
+    console.log(socket.join)
     debug('<-- Connected to Retsly Sockets!');
     // try to establish a session, then connect
   }.bind(this))
 
   // if we disconnect, try to reconnet
-  this.io.on('disconnect', function() {
-    if(!_retsly.io.socket.connected)
-      _retsly.io.socket.reconnect();
+  this.io.on('connect_error', function() {
+    console.log("'<-- Error Connection with Retsly Sockets");
+  });
+
+  this.io.on('reconnect_error', function() {
+     console.log("'<-- Error Reconnection with Retsly Sockets");
   });
 
   this.io.on('reconnect_failed', function() {
