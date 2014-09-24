@@ -73,42 +73,6 @@ module.exports = function extend (object) {
 };
 });
 
-require.register("component~type@1.0.0", function (exports, module) {
-
-/**
- * toString ref.
- */
-
-var toString = Object.prototype.toString;
-
-/**
- * Return the type of `val`.
- *
- * @param {Mixed} val
- * @return {String}
- * @api public
- */
-
-module.exports = function(val){
-  switch (toString.call(val)) {
-    case '[object Function]': return 'function';
-    case '[object Date]': return 'date';
-    case '[object RegExp]': return 'regexp';
-    case '[object Arguments]': return 'arguments';
-    case '[object Array]': return 'array';
-    case '[object String]': return 'string';
-  }
-
-  if (val === null) return 'null';
-  if (val === undefined) return 'undefined';
-  if (val && val.nodeType === 1) return 'element';
-  if (val === Object(val)) return 'object';
-
-  return typeof val;
-};
-
-});
-
 require.register("component~props@1.1.2", function (exports, module) {
 /**
  * Global Names
@@ -351,6 +315,42 @@ function stripNested (prop, str, val) {
     return $1 ? $0 : val;
   });
 }
+
+});
+
+require.register("component~type@1.0.0", function (exports, module) {
+
+/**
+ * toString ref.
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Return the type of `val`.
+ *
+ * @param {Mixed} val
+ * @return {String}
+ * @api public
+ */
+
+module.exports = function(val){
+  switch (toString.call(val)) {
+    case '[object Function]': return 'function';
+    case '[object Date]': return 'date';
+    case '[object RegExp]': return 'regexp';
+    case '[object Arguments]': return 'arguments';
+    case '[object Array]': return 'array';
+    case '[object String]': return 'string';
+  }
+
+  if (val === null) return 'null';
+  if (val === undefined) return 'undefined';
+  if (val && val.nodeType === 1) return 'element';
+  if (val === Object(val)) return 'object';
+
+  return typeof val;
+};
 
 });
 
@@ -4986,112 +4986,109 @@ function extend(target) {
 
 });
 
-require.register("yields~unserialize@0.0.1", function (exports, module) {
-
+require.register("component~cookie@1.0.1", function (exports, module) {
 /**
- * Unserialize the given "stringified" javascript.
- * 
- * @param {String} val
- * @return {Mixed}
+ * Encode.
  */
 
-module.exports = function(val){
-  try {
-    return JSON.parse(val);
-  } catch (e) {
-    return val || undefined;
-  }
-};
-
-});
-
-require.register("yields~store@0.2.0", function (exports, module) {
+var encode = encodeURIComponent;
 
 /**
- * dependencies.
+ * Decode.
  */
 
-var each = require('component~each@0.2.5')
-  , unserialize = require('yields~unserialize@0.0.1')
-  , storage = window.localStorage
-  , type = require('component~type@1.0.0');
+var decode = decodeURIComponent;
 
 /**
- * Store the given `key` `val`.
+ * Set or get cookie `name` with `value` and `options` object.
  *
- * @param {String} key
- * @param {Mixed} val
+ * @param {String} name
+ * @param {String} value
+ * @param {Object} options
  * @return {Mixed}
+ * @api public
  */
 
-exports = module.exports = function(key, val){
+module.exports = function(name, value, options){
   switch (arguments.length) {
-    case 2: return set(key, val);
-    case 0: return all();
-    case 1: return 'object' == type(key)
-      ? each(key, set)
-      : get(key);
+    case 3:
+    case 2:
+      return set(name, value, options);
+    case 1:
+      return get(name);
+    default:
+      return all();
   }
 };
 
 /**
- * supported flag.
- */
-
-exports.supported = !! storage;
-
-/**
- * export methods.
- */
-
-exports.set = set;
-exports.get = get;
-exports.all = all;
-
-/**
- * Set `key` to `val`.
+ * Set cookie `name` to `value`.
  *
- * @param {String} key
- * @param {Mixed} val
+ * @param {String} name
+ * @param {String} value
+ * @param {Object} options
+ * @api private
  */
 
-function set(key, val){
-  return null == val
-    ? storage.removeItem(key)
-    : storage.setItem(key, JSON.stringify(val));
+function set(name, value, options) {
+  options = options || {};
+  var str = encode(name) + '=' + encode(value);
+
+  if (null == value) options.maxage = -1;
+
+  if (options.maxage) {
+    options.expires = new Date(+new Date + options.maxage);
+  }
+
+  if (options.path) str += '; path=' + options.path;
+  if (options.domain) str += '; domain=' + options.domain;
+  if (options.expires) str += '; expires=' + options.expires.toGMTString();
+  if (options.secure) str += '; secure';
+
+  document.cookie = str;
 }
 
 /**
- * Get `key`.
- *
- * @param {String} key
- * @return {Mixed}
- */
-
-function get(key){
-  return null == key
-    ? storage.clear()
-    : unserialize(storage.getItem(key));
-}
-
-/**
- * Get all.
+ * Return all cookies.
  *
  * @return {Object}
+ * @api private
  */
 
-function all(){
-  var len = storage.length
-    , ret = {}
-    , key
-    , val;
+function all() {
+  return parse(document.cookie);
+}
 
-  for (var i = 0; i < len; ++i) {
-    key = storage.key(i);
-    ret[key] = get(key);
+/**
+ * Get cookie `name`.
+ *
+ * @param {String} name
+ * @return {String}
+ * @api private
+ */
+
+function get(name) {
+  return all()[name];
+}
+
+/**
+ * Parse cookie `str`.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function parse(str) {
+  var obj = {};
+  var pairs = str.split(/ *; */);
+  var pair;
+  if ('' == pairs[0]) return obj;
+  for (var i = 0; i < pairs.length; ++i) {
+    pair = pairs[i].split('=');
+    obj[decode(pair[0])] = decode(pair[1]);
   }
-
-  return ret;
+  return obj;
 }
 
 });
@@ -5106,7 +5103,7 @@ var io = require('retsly~socket.io-client@0.9.16');
 var ajax = require('retsly~ajax@0.0.3');
 var each = require('component~each@0.2.5');
 var qs = require('visionmedia~node-querystring@0.6.6').stringify;
-var store = require('yields~store@0.2.0');
+var store = require('component~cookie@1.0.1');
 
 module.exports = Retsly;
 
@@ -5126,12 +5123,13 @@ function Retsly (client_id, token, options) {
   var domain = this.getDomain();
 
   this.host = domain;
-  this.token = token;
   this.sid = null;
-  this.client_id = client_id;
+  this.user_id = null;
+  this.token = _token = token;
+  this.client_id = _client = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
-
   this.__init_stack = [];
+
   _retsly = this;
 
   debug('--> Connecting to Retsly...');
@@ -5196,7 +5194,7 @@ Retsly.client = function (id) {
  * Set Retsly Token
  */
 Retsly.token = function(token) {
-  store('retsly.token', token);
+  this.setAppToken(_client, _token);
   return Retsly;
 }
 
@@ -5264,7 +5262,6 @@ Retsly.prototype.session = function(cb) {
     },
     crossDomain : true,
     error: function (xhr,err) {
-      this.ready();
       throw new Error('Could not set Retsly session');
     }.bind(this),
     success: function(res, status, xhr) {
@@ -5292,27 +5289,47 @@ Retsly.prototype.logout = function(cb) {
     },
     success: function(res, status, xhr) {
       var sid = xhr.getResponseHeader('Retsly-Session');
-      this.setToken(null);
+      this.setUserToken(null);
       cb(sid);
     }.bind(this)
   });
   return this;
 };
 
+
 /**
  * Set an oauth token for extended privileges on current session.
  */
-Retsly.prototype.setToken = function(token) {
-  store('retsly.token', token);
+Retsly.prototype.setToken = Retsly.prototype.setAppToken = function(token) {
+  this.token = _token = token;
   return this;
 };
 
 /**
  * Get the oauth token for current session.
  */
-Retsly.prototype.getToken = function() {
-  return store('retsly.token');
+Retsly.prototype.getToken = Retsly.prototype.getAppToken = function() {
+  var token = this.token;
+  return typeof token === 'string' ? token : false;
 };
+
+/**
+ * Set an oauth token for extended privileges on current session.
+ */
+Retsly.prototype.setUserToken = function(token) {
+  this.token = token;
+  store('retsly.uid', token);
+  return this;
+};
+
+/**
+ * Get the oauth token for current session.
+ */
+Retsly.prototype.getUserToken = function() {
+  var token = store('retsly.uid');
+  return typeof token === 'string' ? token : false;
+};
+
 
 /**
  * Get the Retsly Client ID
@@ -5359,23 +5376,8 @@ Retsly.prototype.post = function(url, body, cb) {
 Retsly.prototype.put = function(url, body, cb) {
   return this.request('put', url, body, cb);
 };
-
 Retsly.prototype.del = function(url, body, cb) {
   return this.request('delete', url, body, cb);
-};
-
-Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
-  var options = {};
-  options.url = url;
-  options.query = query;
-  options.query.client_id = this.client_id;
-
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  this.io.emit('subscribe', options, icb);
-  this.io.on(method, scb);
-  return this;
 };
 
 Retsly.prototype.request = function(method, url, query, cb) {
@@ -5387,8 +5389,6 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   query = query || {};
-  debug('%s --> %s', method, url, query);
-
   var options = {};
   options.query = {};
   options.body = {};
@@ -5397,10 +5397,11 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.url = url;
   options.query.client_id = this.client_id;
 
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-  else
-    return this;
+  if(this.getUserToken())
+    options.query.access_token = this.getUserToken();
+  else if(this.getAppToken())
+    options.query.access_token = this.getAppToken();
+  else return cb({ success: false, status: 401, bundle: 'No token set'})
 
   if('get' === method || 'delete' === method) {
     options.query = extend(options.query, query);
@@ -5415,6 +5416,8 @@ Retsly.prototype.request = function(method, url, query, cb) {
     ? JSON.stringify(options.body)
     : '';
 
+  debug('%s --> %s', method, url, query);
+
   ajax({
     type: method.toUpperCase(),
     dataType: 'json',
@@ -5427,6 +5430,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
     },
     error: function(res, status, xhr) {
       log(method, url, query, res);
+      this.setUserToken(null);
       if(typeof cb === 'function') cb(res);
     },
     success: function(res, status, xhr){
@@ -5507,6 +5511,7 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
 function debug () {
   if (Retsly.debug) console.log.apply(console, arguments);
 }
+
 
 });
 
