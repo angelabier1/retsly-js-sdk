@@ -3,7 +3,7 @@
  * Dependencies
  */
 var extend = require('extend');
-var io = window.io;
+var io = require('socket.io-client');
 var ajax = require('ajax');
 var each = require('each');
 var qs = require('querystring').stringify;
@@ -156,37 +156,47 @@ Retsly.prototype.connect = function(rsid) {
   // TODO: @slajax refactor out of sockets!!!!
   }.bind(this));
 
-  window.exposeSocket = this.io;
-
-
   this.io.on('sessionResponse', function(){
     this.ready();
   }.bind(this));
 
   var _this = this;
 
-
-  this.io.apiroute = function apiroute(path,method,args,cb){
-    var data = {path:path,method:method,args:args};
-    apirouteCallbacks[path] = cb;
+  this.io.apiroute = function apiroute(url,method,args,cb){
+    var data = {url:url,method:method,args:args};
+    apirouteCallbacks[url] = cb;
     _this.io.emit('api', data);
-    console.log("socket api call : ", data);  
+    debug("socket api call : ", data);  
   };
 
-  _this.io.on('api',function(data){
-    //bind ?
-    apirouteCallbacks[path](data);
+  this.io.on('api',function(response){
+    var apiCallback = apirouteCallbacks[response.url];
+    if(apiCallback && response.status === 200) apiCallback(null,response.bundle);
+    else if(apiCallback) apiCallback(response);
+    else throw new Error('Retsly Socket route not defined');
   });
 
+  /*
   window.testApi = function(){
 
     _this.io.apiroute("/api/v1/agent/test.json?access_token=5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW", "GET",
                     {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"}, 
-                    function(data){
-        console.log("gotdata",data);
+                    function(err,data){
+        if(err) debug("ERROR" + JSON.stringify(err));
+        else debug("received data" + JSON.stringify(data));
     });
   }
 
+  window.testApiFail = function(){
+
+    _this.io.apiroute("/api/v1/agent/fail.json?access_token=5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW", "GET",
+                    {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"}, 
+                    function(err,data){
+        if(err) debug("ERROR" + JSON.stringify(err));
+        else debug("received data" + JSON.stringify(data));
+    });
+  }
+  */
 
 };
 
