@@ -61,7 +61,6 @@ function Retsly (client_id, token, options) {
   });
 
   this.io.on('reconnect_failed', function() {
-    this.ready();
   }.bind(this))
 
   if(_attempts === 0)
@@ -129,14 +128,14 @@ Retsly.prototype.css = function() {
   document.getElementsByTagName('head')[0].appendChild(css);
 
 };
-  
+
 var apirouteCallbacks =  {};
 
 Retsly.prototype.connect = function(rsid) {
 
   // force multiple connections if cookie not set
   // but only attempt to connect 3 times then continue on
-  if(_attempts > 2) return this.ready();
+  //if(_attempts > 2) return this.ready();
 
   debug('--> Requesting Retsly Session...', { attempts: _attempts });
 
@@ -150,12 +149,11 @@ Retsly.prototype.connect = function(rsid) {
   setCookie('retsly.sid', encodeURIComponent(rsid));
   debug('<-- Retsly Session Established!', { sid: this.sid });
 
-  // tell retsly.io to listen to session
-  this.io.emit('session', { sid: rsid }, function() {
-  // ready needs to be called AFTER sid is exchanged
-  // TODO: @slajax refactor out of sockets!!!!
-  }.bind(this));
+  // tell rets.io to listen to sid for this client
+  this.io.emit('session', { sid: rsid });
 
+
+  // listen for rets.io to return sid confirmation
   this.io.on('sessionResponse', function(){
     this.ready();
   }.bind(this));
@@ -166,7 +164,7 @@ Retsly.prototype.connect = function(rsid) {
     var data = {url:url,method:method,args:args};
     apirouteCallbacks[url] = cb;
     _this.io.emit('api', data);
-    debug("socket api call : ", data);  
+    debug("socket api call : ", data); 
   };
 
   this.io.on('api',function(response){
@@ -180,10 +178,16 @@ Retsly.prototype.connect = function(rsid) {
   window.testApi = function(){
 
     _this.io.apiroute("/api/v1/agent/test.json?access_token=5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW", "GET",
+<<<<<<< HEAD
                     {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"}, 
                     function(err,data){
         if(err) debug("ERROR" + JSON.stringify(err));
         else debug("received data" + JSON.stringify(data));
+=======
+                    {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"},
+                    function(data){
+        console.log("gotdata",data);
+>>>>>>> d5fc3add832b3fd6e5056eb6b39c4fb29250fbbf
     });
   }
 
@@ -213,7 +217,6 @@ Retsly.prototype.session = function(cb) {
     },
     crossDomain : true,
     error: function (xhr,err) {
-      this.ready();
       throw new Error('Could not set Retsly session');
     }.bind(this),
     success: function(res, status, xhr) {
@@ -360,7 +363,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
-  var data = (options.body && typeof options.body !== 'undefined')
+  var data = (method !== 'get' && options.body && typeof options.body !== 'undefined')
     ? JSON.stringify(options.body)
     : '';
 
