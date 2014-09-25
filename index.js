@@ -98,7 +98,7 @@ Retsly.client = function (id) {
  * Set Retsly Token
  */
 Retsly.token = function(token) {
-  Retsly.token = _token = token;
+  Retsly.setToken(token);
   return Retsly;
 }
 
@@ -334,9 +334,10 @@ Retsly.prototype.request = function(method, url, query, cb) {
     },
     error: function(res, status, xhr) {
       log(method, url, query, res);
-      this.setUserToken(null);
+      //TODO: If cond for invalid token, unset
+      //this.setUserToken(null);
       if(typeof cb === 'function') cb(res);
-    },
+    }.bind(this),
     success: function(res, status, xhr){
       log(method, url, query, res);
       if(typeof cb === 'function') cb(res);

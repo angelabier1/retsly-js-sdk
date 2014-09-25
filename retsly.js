@@ -73,6 +73,42 @@ module.exports = function extend (object) {
 };
 });
 
+require.register("component~type@1.0.0", function (exports, module) {
+
+/**
+ * toString ref.
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Return the type of `val`.
+ *
+ * @param {Mixed} val
+ * @return {String}
+ * @api public
+ */
+
+module.exports = function(val){
+  switch (toString.call(val)) {
+    case '[object Function]': return 'function';
+    case '[object Date]': return 'date';
+    case '[object RegExp]': return 'regexp';
+    case '[object Arguments]': return 'arguments';
+    case '[object Array]': return 'array';
+    case '[object String]': return 'string';
+  }
+
+  if (val === null) return 'null';
+  if (val === undefined) return 'undefined';
+  if (val && val.nodeType === 1) return 'element';
+  if (val === Object(val)) return 'object';
+
+  return typeof val;
+};
+
+});
+
 require.register("component~props@1.1.2", function (exports, module) {
 /**
  * Global Names
@@ -315,42 +351,6 @@ function stripNested (prop, str, val) {
     return $1 ? $0 : val;
   });
 }
-
-});
-
-require.register("component~type@1.0.0", function (exports, module) {
-
-/**
- * toString ref.
- */
-
-var toString = Object.prototype.toString;
-
-/**
- * Return the type of `val`.
- *
- * @param {Mixed} val
- * @return {String}
- * @api public
- */
-
-module.exports = function(val){
-  switch (toString.call(val)) {
-    case '[object Function]': return 'function';
-    case '[object Date]': return 'date';
-    case '[object RegExp]': return 'regexp';
-    case '[object Arguments]': return 'arguments';
-    case '[object Array]': return 'array';
-    case '[object String]': return 'string';
-  }
-
-  if (val === null) return 'null';
-  if (val === undefined) return 'undefined';
-  if (val && val.nodeType === 1) return 'element';
-  if (val === Object(val)) return 'object';
-
-  return typeof val;
-};
 
 });
 
@@ -5093,7 +5093,7 @@ function parse(str) {
 
 });
 
-require.register("retsly-sdk", function (exports, module) {
+require.register("retsly-js-sdk", function (exports, module) {
 
 /**
  * Dependencies
@@ -5194,7 +5194,7 @@ Retsly.client = function (id) {
  * Set Retsly Token
  */
 Retsly.token = function(token) {
-  this.setAppToken(_client, _token);
+  Retsly.setToken(token);
   return Retsly;
 }
 
@@ -5430,9 +5430,10 @@ Retsly.prototype.request = function(method, url, query, cb) {
     },
     error: function(res, status, xhr) {
       log(method, url, query, res);
-      this.setUserToken(null);
+      //TODO: If cond for invalid token, unset
+      //this.setUserToken(null);
       if(typeof cb === 'function') cb(res);
-    },
+    }.bind(this),
     success: function(res, status, xhr){
       log(method, url, query, res);
       if(typeof cb === 'function') cb(res);
@@ -5516,10 +5517,10 @@ function debug () {
 });
 
 if (typeof exports == "object") {
-  module.exports = require("retsly-sdk");
+  module.exports = require("retsly-js-sdk");
 } else if (typeof define == "function" && define.amd) {
-  define([], function(){ return require("retsly-sdk"); });
+  define([], function(){ return require("retsly-js-sdk"); });
 } else {
-  this["Retsly"] = require("retsly-sdk");
+  this["Retsly"] = require("retsly-js-sdk");
 }
 })()
