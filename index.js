@@ -98,7 +98,7 @@ Retsly.client = function (id) {
  * Set Retsly Token
  */
 Retsly.token = function(token) {
-  Retsly.setToken(token);
+  Retsly.token = _token = token;
   return Retsly;
 }
 
