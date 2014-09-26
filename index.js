@@ -7,7 +7,7 @@ var io = require('socket.io-client');
 var ajax = require('ajax');
 var each = require('each');
 var qs = require('querystring').stringify;
-var store = require('store');
+var store = require('cookie');
 
 module.exports = Retsly;
 
@@ -27,12 +27,13 @@ function Retsly (client_id, token, options) {
   var domain = this.getDomain();
 
   this.host = domain;
-  this.token = token;
   this.sid = null;
-  this.client_id = client_id;
+  this.user_id = null;
+  this.token = _token = token;
+  this.client_id = _client = client_id;
   this.options = extend({urlBase: '/api/v1'}, options);
-
   this.__init_stack = [];
+
   _retsly = this;
 
   debug('--> Connecting to Retsly...');
@@ -100,7 +101,7 @@ Retsly.client = function (id) {
  * Set Retsly Token
  */
 Retsly.token = function(token) {
-  store('retsly.token', token);
+  Retsly.token = _token = token;
   return Retsly;
 }
 
@@ -128,7 +129,7 @@ Retsly.prototype.css = function() {
 
 };
 
-var apirouteCallbacks =  {};
+Retsly.socketApiCallbacks =  {};
 
 Retsly.prototype.connect = function(rsid) {
 
@@ -157,52 +158,25 @@ Retsly.prototype.connect = function(rsid) {
     this.ready();
   }.bind(this));
 
-  var _this = this;
-
-  this.io.apiroute = function apiroute(url,method,args,cb){
-    var data = {url:url,method:method,args:args};
-    apirouteCallbacks[url] = cb;
-    _this.io.emit('api', data);
-    debug("socket api call : ", data); 
-  };
-
-  this.io.on('api',function(response){
-    var apiCallback = apirouteCallbacks[response.url];
+  this.io.on('api', function(response){
+    var apiCallback = Retsly.socketApiCallbacks[response.url];
     if(apiCallback && response.status === 200) apiCallback(null,response.bundle);
     else if(apiCallback) apiCallback(response);
     else throw new Error('Retsly Socket route not defined');
   });
 
-  /*
-  window.testApi = function(){
-
-    _this.io.apiroute("/api/v1/agent/test.json?access_token=5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW", "GET",
-<<<<<<< HEAD
-                    {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"}, 
-                    function(err,data){
-        if(err) debug("ERROR" + JSON.stringify(err));
-        else debug("received data" + JSON.stringify(data));
-=======
-                    {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"},
-                    function(data){
-        console.log("gotdata",data);
->>>>>>> d5fc3add832b3fd6e5056eb6b39c4fb29250fbbf
-    });
-  }
-
-  window.testApiFail = function(){
-
-    _this.io.apiroute("/api/v1/agent/fail.json?access_token=5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW", "GET",
-                    {access_token:"5OylUxE1Z3T8u3Fbcy8LLUJeao5IidzW"}, 
-                    function(err,data){
-        if(err) debug("ERROR" + JSON.stringify(err));
-        else debug("received data" + JSON.stringify(data));
-    });
-  }
-  */
-
 };
 
+/**
+ * Allows you to request data over sockets 
+ */
+Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
+    var data = {'url':url,'method':method,'args':args};
+    Retsly.socketApiCallbacks[url] = cb;
+    debug("socket emi api call : ", data); 
+    this.io.emit('api', data);
+};
+  
 Retsly.prototype.session = function(cb) {
   cb = cb || function() {};
   _attempts++;
@@ -243,27 +217,47 @@ Retsly.prototype.logout = function(cb) {
     },
     success: function(res, status, xhr) {
       var sid = xhr.getResponseHeader('Retsly-Session');
-      this.setToken(null);
+      this.setUserToken(null);
       cb(sid);
     }.bind(this)
   });
   return this;
 };
 
+
 /**
  * Set an oauth token for extended privileges on current session.
  */
-Retsly.prototype.setToken = function(token) {
-  store('retsly.token', token);
+Retsly.prototype.setToken = Retsly.prototype.setAppToken = function(token) {
+  this.token = _token = token;
   return this;
 };
 
 /**
  * Get the oauth token for current session.
  */
-Retsly.prototype.getToken = function() {
-  return store('retsly.token');
+Retsly.prototype.getToken = Retsly.prototype.getAppToken = function() {
+  var token = this.token;
+  return typeof token === 'string' ? token : false;
 };
+
+/**
+ * Set an oauth token for extended privileges on current session.
+ */
+Retsly.prototype.setUserToken = function(token) {
+  this.token = token;
+  store('retsly.uid', token);
+  return this;
+};
+
+/**
+ * Get the oauth token for current session.
+ */
+Retsly.prototype.getUserToken = function() {
+  var token = store('retsly.uid');
+  return typeof token === 'string' ? token : false;
+};
+
 
 /**
  * Get the Retsly Client ID
@@ -310,23 +304,8 @@ Retsly.prototype.post = function(url, body, cb) {
 Retsly.prototype.put = function(url, body, cb) {
   return this.request('put', url, body, cb);
 };
-
 Retsly.prototype.del = function(url, body, cb) {
   return this.request('delete', url, body, cb);
-};
-
-Retsly.prototype.subscribe = function(method, url, query, scb, icb) {
-  var options = {};
-  options.url = url;
-  options.query = query;
-  options.query.client_id = this.client_id;
-
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-
-  this.io.emit('subscribe', options, icb);
-  this.io.on(method, scb);
-  return this;
 };
 
 Retsly.prototype.request = function(method, url, query, cb) {
@@ -338,8 +317,6 @@ Retsly.prototype.request = function(method, url, query, cb) {
   }
 
   query = query || {};
-  debug('%s --> %s', method, url, query);
-
   var options = {};
   options.query = {};
   options.body = {};
@@ -348,10 +325,11 @@ Retsly.prototype.request = function(method, url, query, cb) {
   options.url = url;
   options.query.client_id = this.client_id;
 
-  if(this.getToken())
-    options.query.access_token = this.getToken();
-  else
-    return this;
+  if(this.getUserToken())
+    options.query.access_token = this.getUserToken();
+  else if(this.getAppToken())
+    options.query.access_token = this.getAppToken();
+  else return cb({ success: false, status: 401, bundle: 'No token set'})
 
   if('get' === method || 'delete' === method) {
     options.query = extend(options.query, query);
@@ -366,6 +344,8 @@ Retsly.prototype.request = function(method, url, query, cb) {
     ? JSON.stringify(options.body)
     : '';
 
+  debug('%s --> %s', method, url, query);
+
   ajax({
     type: method.toUpperCase(),
     dataType: 'json',
@@ -378,8 +358,10 @@ Retsly.prototype.request = function(method, url, query, cb) {
     },
     error: function(res, status, xhr) {
       log(method, url, query, res);
+      //TODO: If cond for invalid token, unset
+      //this.setUserToken(null);
       if(typeof cb === 'function') cb(res);
-    },
+    }.bind(this),
     success: function(res, status, xhr){
       log(method, url, query, res);
       if(typeof cb === 'function') cb(res);
@@ -458,3 +440,4 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
 function debug () {
   if (Retsly.debug) console.log.apply(console, arguments);
 }
+

@@ -1,5 +1,5 @@
 {
-  "name": "retsly-sdk",
+  "name": "retsly-js-sdk",
   "repo": "Retsly/retsly-js-sdk",
   "description": "Retsly JavaScript SDK",
   "version": "0.4.1",
@@ -9,7 +9,7 @@
     "segmentio/extend": "*",
     "component/each": "*",
     "visionmedia/node-querystring": "*",
-    "yields/store": "0.2.0"
+    "component/cookie": "1.0.1"
   },
   "development": {
     "timoxley/assert": "*",
