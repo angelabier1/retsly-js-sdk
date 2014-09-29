@@ -124,7 +124,7 @@ Retsly.prototype.css = function() {
     css.id = 'retsly-css-sdk';
     css.media = 'all';
     css.rel = 'stylesheet';
-    css.href = getDomain()+'/css/sdk/sdk.css'
+    css.href = getDomain()+'/sdk/sdk.css'
   document.getElementsByTagName('head')[0].appendChild(css);
 
 };
