@@ -3,7 +3,7 @@
  * Dependencies
  */
 var extend = require('extend');
-var io = require('socket.io');
+var io = require('socket.io-client');
 var ajax = require('ajax');
 var each = require('each');
 var qs = require('querystring').stringify;
@@ -40,24 +40,27 @@ function Retsly (client_id, token, options) {
 
   // set up socket.io connection
   this.io = io.connect(getDomain(), {
-    'reconnection delay': 5000, // retry every 2 seconds
-    'reconnection limit': 100, // defaults to Infinity
-    'max reconnection attempts': Infinity // defaults to 10
+    'reconnectionDelay': 5000, // retry every 2 seconds
+    //'reconnection limit': 100, // defaults to Infinity
+    'timeout': 10000 // defaults to 10
   });
 
-  this.io.on('connect', function() {
+
+  this.io.on('connection', function(socket) {
     debug('<-- Connected to Retsly Sockets!');
     // try to establish a session, then connect
   }.bind(this))
 
   // if we disconnect, try to reconnet
-  this.io.on('disconnect', function() {
-    if(!_retsly.io.socket.connected)
-      _retsly.io.socket.reconnect();
+  this.io.on('connect_error', function() {
+    debug("Connected error");
+  });
+
+    this.io.on('reconnect_error', function() {
+    debug("reconnect_error error");
   });
 
   this.io.on('reconnect_failed', function() {
-    this.ready();
   }.bind(this))
 
   if(_attempts === 0)
@@ -121,16 +124,18 @@ Retsly.prototype.css = function() {
     css.id = 'retsly-css-sdk';
     css.media = 'all';
     css.rel = 'stylesheet';
-    css.href = getDomain()+'/css/sdk'
+    css.href = getDomain()+'/sdk/sdk.css'
   document.getElementsByTagName('head')[0].appendChild(css);
 
 };
+
+Retsly.socketApiCallbacks =  {};
 
 Retsly.prototype.connect = function(rsid) {
 
   // force multiple connections if cookie not set
   // but only attempt to connect 3 times then continue on
-  if(_attempts > 2) return this.ready();
+  //if(_attempts > 2) return this.ready();
 
   debug('--> Requesting Retsly Session...', { attempts: _attempts });
 
@@ -144,15 +149,34 @@ Retsly.prototype.connect = function(rsid) {
   setCookie('retsly.sid', encodeURIComponent(rsid));
   debug('<-- Retsly Session Established!', { sid: this.sid });
 
-  // tell retsly.io to listen to session
-  this.io.emit('session', { sid: rsid }, function() {
-  // ready needs to be called AFTER sid is exchanged
-  // TODO: @slajax refactor out of sockets!!!!
+  // tell rets.io to listen to sid for this client
+  this.io.emit('session', { sid: rsid });
+
+
+  // listen for rets.io to return sid confirmation
+  this.io.on('sessionResponse', function(){
     this.ready();
   }.bind(this));
 
+  this.io.on('api', function(response){
+    var apiCallback = Retsly.socketApiCallbacks[response.url];
+    if(apiCallback && response.status === 200) apiCallback(null,response.bundle);
+    else if(apiCallback) apiCallback(response);
+    else throw new Error('Retsly Socket route not defined');
+  });
+
 };
 
+/**
+ * Allows you to request data over sockets 
+ */
+Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
+    var data = {'url':url,'method':method,'args':args};
+    Retsly.socketApiCallbacks[url] = cb;
+    debug("socket emi api call : ", data); 
+    this.io.emit('api', data);
+};
+  
 Retsly.prototype.session = function(cb) {
   cb = cb || function() {};
   _attempts++;

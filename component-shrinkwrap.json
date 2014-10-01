@@ -8,7 +8,7 @@
     "component/trim": "0.0.1",
     "component/type": "1.0.0",
     "retsly/ajax": "0.0.3",
-    "retsly/socket.io-client": "0.9.16",
+    "retsly/socket.io-client": "1.1.1",
     "segmentio/extend": "0.0.1",
     "sindresorhus/query-string": "0.4.0",
     "timoxley/assert": "0.0.1",
