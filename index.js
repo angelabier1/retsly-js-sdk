@@ -66,7 +66,8 @@ function Retsly (client_id, token, options) {
   if(_attempts === 0)
     this.session(this.connect.bind(this));
 
-  this.css();
+  // css causes (derp) session issues
+  // this.css();
 
 }
 
@@ -168,15 +169,15 @@ Retsly.prototype.connect = function(rsid) {
 };
 
 /**
- * Allows you to request data over sockets 
+ * Allows you to request data over sockets
  */
 Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
     var data = {'url':url,'method':method,'args':args};
     Retsly.socketApiCallbacks[url] = cb;
-    debug("socket emi api call : ", data); 
+    debug("socket emi api call : ", data);
     this.io.emit('api', data);
 };
-  
+
 Retsly.prototype.session = function(cb) {
   cb = cb || function() {};
   _attempts++;
