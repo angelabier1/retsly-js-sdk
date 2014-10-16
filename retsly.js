@@ -7809,6 +7809,7 @@ var getDomain = Retsly.prototype.getDomain = function () {
   var domain = 'https://rets.io:443';
   if (~document.domain.indexOf('dev.rets')) domain = 'https://dev.rets.io:443';
   if (~document.domain.indexOf('stg.rets')) domain = 'https://stg.rets.io:443';
+  if (~document.domain.indexOf('ci.rets')) domain = 'https://ci.rets.io:443';
   return domain;
 };
 
