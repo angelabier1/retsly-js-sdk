@@ -440,6 +440,6 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
  * Logs only if debug mode
  */
 function debug () {
-  if (Retsly.debug) console.log.apply(console, arguments);
+  Function.prototype.apply.call( console.log, console, arguments );
 }
 
