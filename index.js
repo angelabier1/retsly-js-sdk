@@ -1,3 +1,5 @@
+sdk
+
 
 /**
  * Dependencies
@@ -133,10 +135,10 @@ Retsly.prototype.css = function() {
 Retsly.socketApiCallbacks =  {};
 
 Retsly.prototype.connect = function(rsid) {
-
+  if (rsid === false) rsid = rsid.toString();
   // force multiple connections if cookie not set
   // but only attempt to connect 3 times then continue on
-  //if(_attempts > 2) return this.ready();
+  if(_attempts > 2) return this.ready();
 
   debug('--> Requesting Retsly Session...', { attempts: _attempts });
 
@@ -182,10 +184,14 @@ Retsly.prototype.session = function(cb) {
   cb = cb || function() {};
   _attempts++;
 
+  var data = { origin: getOrigin()}
+  if (window.XDomainRequest)
+    data.session_id = valFromCookie(document.cookie,'retsly.sid');
+
   ajax({
     type: 'GET',
     url: this.getURL('session'),
-    data: { origin: getOrigin() },
+    data: data,
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
     },
@@ -194,12 +200,24 @@ Retsly.prototype.session = function(cb) {
       throw new Error('Could not set Retsly session');
     }.bind(this),
     success: function(res, status, xhr) {
-      var sid = xhr.getResponseHeader('Retsly-Session');
+      var sid;
+      (xhr.getResponseHeader)
+        ? sid = xhr.getResponseHeader('Retsly-Session')
+        : sid = JSON.parse(res).bundle;
       cb(sid);
     }
   });
 
 };
+
+function valFromCookie(cookie, key) {
+  var str = cookie.split('; ');
+  for (var i = 0; i < str.length; i++) {
+    if(str[i].indexOf(key) !== -1) {
+      return str[i].split('=')[1];
+    }
+  }
+}
 
 /**
  * Log out a Retsly session;
@@ -354,7 +372,7 @@ Retsly.prototype.request = function(method, url, query, cb) {
     url: endpoint,
     contentType: 'application/json',
     beforeSend: function(xhr) {
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      if (window.XMLHttpRequest) xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.withCredentials = true;
     },
     error: function(res, status, xhr) {
