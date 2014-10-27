@@ -135,7 +135,7 @@ Retsly.prototype.css = function() {
 Retsly.socketApiCallbacks =  {};
 
 Retsly.prototype.connect = function(rsid) {
-  if (rsid === false) rsid = rsid.toString();
+
   // force multiple connections if cookie not set
   // but only attempt to connect 3 times then continue on
   if(_attempts > 2) return this.ready();
@@ -148,17 +148,17 @@ Retsly.prototype.connect = function(rsid) {
   // on first try, express will not be able to return a sid
   if(rsid === 'false') return this.session(this.connect.bind(this));
 
-  // session sid established, syncing cookie
-  setCookie('retsly.sid', encodeURIComponent(rsid));
-  debug('<-- Retsly Session Established!', { sid: this.sid });
-
   // tell rets.io to listen to sid for this client
   this.io.emit('session', { sid: rsid });
 
-
   // listen for rets.io to return sid confirmation
-  this.io.on('sessionResponse', function(){
-    this.ready();
+  this.io.on('sessionResponse', function(data){
+    if(data.bundle === rsid) {
+      // session sid established, syncing cookie
+      setCookie('retsly.sid', encodeURIComponent(data.bundle));
+      debug('<-- Retsly Session Established!', data.bundle);
+      this.ready();
+    }
   }.bind(this));
 
   this.io.on('api', function(response){
