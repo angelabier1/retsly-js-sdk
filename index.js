@@ -1,5 +1,3 @@
-sdk
-
 
 /**
  * Dependencies
