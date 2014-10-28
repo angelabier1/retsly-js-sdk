@@ -38,6 +38,18 @@ function Retsly (client_id, token, options) {
 
   debug('--> Connecting to Retsly...');
 
+
+  if(_attempts === 0)
+    this.session(this.connect.bind(this));
+
+  // css causes (derp) session issues
+  // TODO: @slajax fix
+  // this.css();
+
+}
+
+Retsly.prototype.doSockets = function() {
+
   // set up socket.io connection
   this.io = io.connect(getDomain(), {
     'reconnectionDelay': 5000, // retry every 2 seconds
@@ -53,21 +65,16 @@ function Retsly (client_id, token, options) {
 
   // if we disconnect, try to reconnet
   this.io.on('connect_error', function() {
-    debug("Connected error");
+    debug('connect error');
   });
 
     this.io.on('reconnect_error', function() {
-    debug("reconnect_error error");
+    debug('reconnect error');
   });
 
   this.io.on('reconnect_failed', function() {
+    debug('reconnect failed')
   }.bind(this))
-
-  if(_attempts === 0)
-    this.session(this.connect.bind(this));
-
-  // css causes (derp) session issues
-  // this.css();
 
 }
 
@@ -138,25 +145,29 @@ Retsly.prototype.connect = function(rsid) {
   // but only attempt to connect 3 times then continue on
   if(_attempts > 2) return this.ready();
 
-  debug('--> Requesting Retsly Session...', { attempts: _attempts });
+  debug('--> Requesting Retsly Session... attempts: '+_attempts);
 
   // on first try, express will not be able to return a sid
-  this.sid = rsid;
+  this.sid = decodeURIComponent(rsid);
 
   // on first try, express will not be able to return a sid
-  if(rsid === 'false') return this.session(this.connect.bind(this));
+  if(!this.sid || this.sid === 'false') return this.session(this.connect.bind(this));
+
+  setCookie('retsly.sid', this.sid);
+  this.doSockets();
 
   // tell rets.io to listen to sid for this client
-  this.io.emit('session', { sid: rsid });
+  this.io.emit('session', { sid: this.sid });
 
   // listen for rets.io to return sid confirmation
   this.io.on('sessionResponse', function(data){
-    if(data.bundle === rsid) {
+    if(data.bundle === this.sid) {
       // session sid established, syncing cookie
-      setCookie('retsly.sid', encodeURIComponent(data.bundle));
-      debug('<-- Retsly Session Established!', data.bundle);
-      this.ready();
+      debug('<-- Retsly Session Established! ', this.sid);
+    } else {
+      debug('XXX - Sessions do not match', data.bundle)
     }
+    this.ready();
   }.bind(this));
 
   this.io.on('api', function(response){
@@ -174,7 +185,7 @@ Retsly.prototype.connect = function(rsid) {
 Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
     var data = {'url':url,'method':method,'args':args};
     Retsly.socketApiCallbacks[url] = cb;
-    debug("socket emi api call : ", data);
+    debug("socket api call : ", data);
     this.io.emit('api', data);
 };
 
@@ -182,9 +193,13 @@ Retsly.prototype.session = function(cb) {
   cb = cb || function() {};
   _attempts++;
 
-  var data = { origin: getOrigin()}
-  if (window.XDomainRequest)
-    data.session_id = valFromCookie(document.cookie,'retsly.sid');
+  var data = { }
+
+/*
+ *  if (window.XDomainRequest)
+ *    data.session_id = this.getCookie('retsly.sid');
+ */
+  data.origin = getOrigin();
 
   ajax({
     type: 'GET',
@@ -192,6 +207,8 @@ Retsly.prototype.session = function(cb) {
     data: data,
     beforeSend: function(xhr) {
       xhr.withCredentials = true;
+      if (window.XMLHttpRequest && !window.XDomainRequest)
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     },
     crossDomain : true,
     error: function (xhr,err) {
@@ -202,20 +219,12 @@ Retsly.prototype.session = function(cb) {
       (xhr.getResponseHeader)
         ? sid = xhr.getResponseHeader('Retsly-Session')
         : sid = JSON.parse(res).bundle;
+
       cb(sid);
     }
   });
 
 };
-
-function valFromCookie(cookie, key) {
-  var str = cookie.split('; ');
-  for (var i = 0; i < str.length; i++) {
-    if(str[i].indexOf(key) !== -1) {
-      return str[i].split('=')[1];
-    }
-  }
-}
 
 /**
  * Log out a Retsly session;
@@ -370,8 +379,9 @@ Retsly.prototype.request = function(method, url, query, cb) {
     url: endpoint,
     contentType: 'application/json',
     beforeSend: function(xhr) {
-      if (window.XMLHttpRequest) xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.withCredentials = true;
+      if (window.XMLHttpRequest && !window.XDomainRequest)
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     },
     error: function(res, status, xhr) {
       log(method, url, query, res);
