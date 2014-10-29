@@ -33,6 +33,7 @@ test('has public options property', function () {
 
 test('has a socket.io connection', function () {
   var r = new Retsly('test', 'test');
+  r.doSockets();
   assert(r.io);
 });
 
