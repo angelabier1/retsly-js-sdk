@@ -349,7 +349,8 @@ Retsly.prototype.del = function(url, body, cb) {
 };
 
 Retsly.prototype.request = function(method, url, query, cb) {
-
+  var self = this;
+  
   // query is optional
   if (undefined === cb && 'function' == typeof query) {
     cb = query;
