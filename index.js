@@ -161,12 +161,11 @@ Retsly.prototype.connect = function(rsid) {
 
   // listen for rets.io to return sid confirmation
   this.io.on('sessionResponse', function(data){
-    if(data.bundle === this.sid) {
-      // session sid established, syncing cookie
-      debug('<-- Retsly Session Established! ', this.sid);
-    } else {
-      debug('XXX - Sessions do not match', data.bundle)
-    }
+    // session sid established, syncing cookie
+    (data.bundle === this.sid)
+      ? debug('<-- Retsly Session Established! ', this.sid)
+      : debug('XXX - Sessions do not match', data.bundle);
+
     this.ready();
   }.bind(this));
 
@@ -185,7 +184,7 @@ Retsly.prototype.connect = function(rsid) {
 Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
     var data = {'url':url,'method':method,'args':args};
     Retsly.socketApiCallbacks[url] = cb;
-    debug("socket api call : ", data);
+    debug('socket api call : ', data);
     this.io.emit('api', data);
 };
 
