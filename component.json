@@ -4,7 +4,7 @@
   "description": "Retsly JavaScript SDK",
   "version": "0.6.5",
   "dependencies": {
-    "retsly/ajax": "0.0.3",
+    "retsly/ajax": "^0.0.4",
     "retsly/socket.io-client":"1.1.1",
     "segmentio/extend": "1.0.0",
     "component/each": "0.2.5",
