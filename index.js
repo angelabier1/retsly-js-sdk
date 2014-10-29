@@ -168,7 +168,7 @@ Retsly.prototype.connect = function(rsid) {
   // on first try, express will not be able to return a sid
   if(!this.sid || this.sid === 'false') return this.session(this.connect.bind(this));
 
-  setCookie('retsly.sid', this.sid);
+  setCookie('retsly.sid', this.sid, 10800000); // 3hrs
   this.doSockets();
 
   // tell rets.io to listen to sid for this client
@@ -466,15 +466,15 @@ var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
 /**
  * Cookie setter
  */
-var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
+var setCookie = Retsly.prototype.setCookie = function(name, value, ms) {
   var expires = '';
-  if (days) {
+  if (ms) {
     var date = new Date();
-    date.setTime(date.getTime()+(days*24*60*60*1000));
+    date.setTime(date.getTime()+(ms));
     expires = '; expires='+date.toGMTString();
   }
   document.cookie = name+'='+value+expires+'; path=/';
-}
+};
 
 /**
  * Logs only if debug mode
