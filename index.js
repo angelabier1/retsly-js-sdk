@@ -1,4 +1,3 @@
-
 /**
  * Dependencies
  */
@@ -8,6 +7,7 @@ var ajax = require('ajax');
 var each = require('each');
 var qs = require('querystring').stringify;
 var store = require('cookie');
+var emitter = require('emitter');
 
 module.exports = Retsly;
 
@@ -46,6 +46,8 @@ function Retsly (client_id, token, options) {
   // TODO: @slajax fix
   // this.css();
 
+  emitter(this);
+
 }
 
 Retsly.prototype.doSockets = function() {
@@ -68,7 +70,7 @@ Retsly.prototype.doSockets = function() {
     debug('connect error');
   });
 
-    this.io.on('reconnect_error', function() {
+  this.io.on('reconnect_error', function() {
     debug('reconnect error');
   });
 
@@ -103,7 +105,7 @@ Retsly.create = function create (client, token, opts) {
 Retsly.client = function (id) {
   _client = id;
   return Retsly;
-}
+};
 
 /**
  * Set Retsly Token
@@ -111,7 +113,20 @@ Retsly.client = function (id) {
 Retsly.token = function(token) {
   Retsly.token = _token = token;
   return Retsly;
-}
+};
+
+/**
+ * Validate session state
+ */
+Retsly.prototype.validateSession = function(status) {
+  switch (status.toString()) {
+    case '401':
+      debug('--> Session expired!');
+      this.setUserToken(null);
+      this.emit('SessionExpired');
+  }
+  return;
+};
 
 /*
  * Set Retsly Options
@@ -119,7 +134,7 @@ Retsly.token = function(token) {
 Retsly.options = function (opts) {
   _opts = opts;
   return Retsly;
-}
+};
 
 /**
  * Initialze Retsly CSS
@@ -129,10 +144,10 @@ Retsly.prototype.css = function() {
   if( document.getElementById('retsly-css-sdk') ) return;
 
   var css = document.createElement('link');
-    css.id = 'retsly-css-sdk';
-    css.media = 'all';
-    css.rel = 'stylesheet';
-    css.href = getDomain()+'/sdk/sdk.css'
+  css.id = 'retsly-css-sdk';
+  css.media = 'all';
+  css.rel = 'stylesheet';
+  css.href = getDomain()+'/sdk/sdk.css'
   document.getElementsByTagName('head')[0].appendChild(css);
 
 };
@@ -153,7 +168,7 @@ Retsly.prototype.connect = function(rsid) {
   // on first try, express will not be able to return a sid
   if(!this.sid || this.sid === 'false') return this.session(this.connect.bind(this));
 
-  setCookie('retsly.sid', this.sid);
+  setCookie('retsly.sid', this.sid, 10800000); // 3hrs
   this.doSockets();
 
   // tell rets.io to listen to sid for this client
@@ -163,8 +178,8 @@ Retsly.prototype.connect = function(rsid) {
   this.io.on('sessionResponse', function(data){
     // session sid established, syncing cookie
     (data.bundle === this.sid)
-      ? debug('<-- Retsly Session Established! ', this.sid)
-      : debug('XXX - Sessions do not match', data.bundle);
+        ? debug('<-- Retsly Session Established! ', this.sid)
+        : debug('XXX - Sessions do not match', data.bundle);
 
     this.ready();
   }.bind(this));
@@ -182,10 +197,10 @@ Retsly.prototype.connect = function(rsid) {
  * Allows you to request data over sockets
  */
 Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
-    var data = {'url':url,'method':method,'args':args};
-    Retsly.socketApiCallbacks[url] = cb;
-    debug('socket api call : ', data);
-    this.io.emit('api', data);
+  var data = {'url':url,'method':method,'args':args};
+  Retsly.socketApiCallbacks[url] = cb;
+  debug('socket api call : ', data);
+  this.io.emit('api', data);
 };
 
 Retsly.prototype.session = function(cb) {
@@ -194,10 +209,10 @@ Retsly.prototype.session = function(cb) {
 
   var data = { }
 
-/*
- *  if (window.XDomainRequest)
- *    data.session_id = this.getCookie('retsly.sid');
- */
+  /*
+   *  if (window.XDomainRequest)
+   *    data.session_id = this.getCookie('retsly.sid');
+   */
   data.origin = getOrigin();
 
   ajax({
@@ -216,8 +231,8 @@ Retsly.prototype.session = function(cb) {
     success: function(res, status, xhr) {
       var sid;
       (xhr.getResponseHeader)
-        ? sid = xhr.getResponseHeader('Retsly-Session')
-        : sid = JSON.parse(res).bundle;
+          ? sid = xhr.getResponseHeader('Retsly-Session')
+          : sid = JSON.parse(res).bundle;
 
       cb(sid);
     }
@@ -366,8 +381,8 @@ Retsly.prototype.request = function(method, url, query, cb) {
 
   var endpoint = getDomain() + url + '?' + getQuery(options.query);
   var data = (method !== 'get' && options.body && typeof options.body !== 'undefined')
-    ? JSON.stringify(options.body)
-    : '';
+      ? JSON.stringify(options.body)
+      : '';
 
   debug('%s --> %s', method, url, query);
 
@@ -384,12 +399,12 @@ Retsly.prototype.request = function(method, url, query, cb) {
     },
     error: function(res, status, xhr) {
       log(method, url, query, res);
-      //TODO: If cond for invalid token, unset
-      //this.setUserToken(null);
+      self.validateSession(res.status);
       if(typeof cb === 'function') cb(res);
     }.bind(this),
     success: function(res, status, xhr){
       log(method, url, query, res);
+      self.validateSession(res.status);
       if(typeof cb === 'function') cb(res);
     }
   });
@@ -430,9 +445,9 @@ var getDomain = Retsly.prototype.getDomain = function () {
  */
 var getOrigin = Retsly.prototype.getOrigin = function () {
   return document.location.protocol
-    + '//'
-    + document.domain
-    + (document.location.port ? (':' + document.location.port) : '');
+      + '//'
+      + document.domain
+      + (document.location.port ? (':' + document.location.port) : '');
 };
 
 /**
@@ -451,15 +466,15 @@ var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
 /**
  * Cookie setter
  */
-var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
+var setCookie = Retsly.prototype.setCookie = function(name, value, ms) {
   var expires = '';
-  if (days) {
+  if (ms) {
     var date = new Date();
-    date.setTime(date.getTime()+(days*24*60*60*1000));
+    date.setTime(date.getTime()+(ms));
     expires = '; expires='+date.toGMTString();
   }
   document.cookie = name+'='+value+expires+'; path=/';
-}
+};
 
 /**
  * Logs only if debug mode
@@ -467,4 +482,3 @@ var setCookie = Retsly.prototype.setCookie = function(name, value, days) {
 function debug () {
   if (Retsly.debug) Function.prototype.apply.call( console.log, console, arguments );
 }
-
