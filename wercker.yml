@@ -10,7 +10,7 @@ build:
     - script:
         name: github auth
         code: |
-          export GITHUB_USERNAME=6f6bb632b5d52da1ef47eb9c0db2477c223520fb
+          export GITHUB_USERNAME=51b5e5a47ea024cb9af228039f1187d94e0055e1
           export GITHUB_PASSWORD=x-oauth-basic
     - script:
         name: make test
