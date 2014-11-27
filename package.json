@@ -13,13 +13,19 @@
     "url": "git@github.com:Retsly/retsly-js-sdk.git"
   },
   "dependencies": {
-    "socket.io-client":"1.1.0",
+    "socket.io-client": "1.1.0",
     "extend": "2.0.0",
     "qs": "2.3.3",
     "component-each": "0.2.5",
     "component-ajax": "^0.0.2",
     "component-emitter": "1.1.3",
     "component-cookie": "git+ssh://git@github.com:wired8/cookie#master"
+  },
+  "browser": {
+    "each": "component-each",
+    "ajax": "component-ajax",
+    "emitter": "component-emitter",
+    "cookie": "component-cookie"
   },
   "keywords": [
     "retsly",
@@ -34,5 +40,11 @@
   },
   "homepage": "https://github.com/Retsly/retsly-js-sdk",
   "_id": "retsly-js-sdk@0.6.6",
-  "_from": "retsly-js-sdk@^0.6.6"
+  "_from": "retsly-js-sdk@^0.6.6",
+  "readme": "# retsly-js-sdk [![wercker status](https://app.wercker.com/status/0fdacfc21927ee822804af8c7887568d/s/ \"wercker status\")](https://app.wercker.com/project/bykey/0fdacfc21927ee822804af8c7887568d)\nRetsly core SDK. Useful for clientside integration with [Retsly](http://rets.ly).\n\nThis component provides low-level access to the socket API. For a higher-level\ncomponent, use [retsly/retsly-js-backbone](https://github.com/retsly/retsly-js-backbone).\n\n> After you get an API Key you can check out the [API Docs](http://rets.ly/docs).\n\n## Installation\n\n#### Quick Start\n\nInclude the hosted SDK in your HTML header:\n\n```html\n<script src='https://rets.ly/js/sdk'></script>\n```\n\n#### Use with component\n\nInstall with [component](https://github.com/component/component):\n\n```bash\n$ component install retsly/retsly-js-sdk\n```\n\nUse with `require`:\n\n```js\nvar Retsly = require('retsly-js-sdk')\n```\n\n#### Build from source\n\nClone the repo and build the standalone file `retsly.js`:\n\n```bash\n$ git clone https://github.com/Retsly/retsly-js-sdk\n$ cd retsly-js-sdk\n$ make dist\n```\n\nInclude in your project:\n\n```html\n<script src='/path/to/retsly.js'></script>\n```\n\nThis will export the client SDK as an AMD or CommonJS module,\nor `window.Retsly`.\n\n#### Use with Phonegap\n\nYou'll need to add **rets.ly** and **rets.io** to your application's whitelist.\nSee the [Whitelist Guide](http://docs.phonegap.com/en/3.1.0/guide_appdev_whitelist_index.md.html)\nfor instructions.\n\n\n## Example\n\n```js\nvar retsly = require('retsly-js-sdk');\nvar retsly = new Retsly(YOUR_CLIENT_ID, YOUR_JS_TOKEN);\nretsly.ready(function(){\n  retsly.get('/api/v1/listing/sandicor.json', {limit: 10}, function(res){\n    if (!res.success) throw new Error(res.bundle);\n    console.log(res);\n  });\n});\n```\n\n## Building Retsly Components\n\nRetsly components should be built using\n[component](https://github.com/component/component). Components should\nfollow the naming convention `retsly`-`lang_prefix`-`name`. Add new\ncomponents to the [wiki](https://github.com/Retsly/retsly-js-sdk/wiki/Component-List).\nThis will allow anyone to install these components and include them into\ntheir source using require:\n\n```js\n// Example of how a featured listing component might look\nvar Featured = require('retsly-js-featured');\nvar feature = new Featured('#featured', { vendorID: mls.id, listings: listings, limit: 10 });\nfeature.on('click', doSomething);\n```\n\nWhen at all possible abstract specific component behavior into it's own\ncomponent. If you find your feature includes multiple components, try to\nseparate the logic into individual componets, then require them in your\n`component.json` file. This granularity will promote the reuse of generic\nfunctionality within the Retsly community.\n\n## Repo Owner\n\n[Jason Wan](http://github.com/jkhwan)\n\n## License\n\n(The MIT License)\n\nCopyright (c) 2013 Retsly Software Inc <support@rets.ly>\n\nPermission is hereby granted, free of charge, to any person obtaining a\ncopy of this software and associated documentation files (the 'Software'),\nto deal in the Software without restriction, including without limitation\nthe rights to use, copy, modify, merge, publish, distribute, sublicense,\nand/or sell copies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included\nin all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS\nOR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL\nTHE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\nDEALINGS IN THE SOFTWARE.\n",
+  "dist": {
+    "shasum": "67c39d32bee6236d55e075ea7252fac362716ab0"
+  },
+  "_resolved": "git+ssh://git@github.com:wired8/retsly-js-sdk#3a35bba41aa3baf6c4f764bef1d7f5dc57e00286"
+
 }

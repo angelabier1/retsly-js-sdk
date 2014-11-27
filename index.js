@@ -3,11 +3,11 @@
  */
 var extend = require('extend');
 var io = require('socket.io-client');
-var qs = require('qs').stringify;
-var ajax = require('./node_modules/component-ajax/index.js', {expose: 'ajax'});
-var each = require('./node_modules/component-each/index.js', {expose: 'each'});
-var store = require('./node_modules/component-cookie/index.js', {expose: 'cookie'});
-var emitter = require('./node_modules/component-emitter/index.js', {expose: 'emitter'});
+var ajax = require('ajax');
+var each = require('each');
+var qs = require('querystring').stringify;
+var store = require('cookie');
+var emitter = require('emitter');
 
 module.exports = Retsly;
 
