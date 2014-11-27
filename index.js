@@ -3,11 +3,11 @@
  */
 var extend = require('extend');
 var io = require('socket.io-client');
-var ajax = require('ajax');
-var each = require('each');
 var qs = require('qs').stringify;
-var store = require('cookie');
-var emitter = require('emitter');
+var ajax = require('./node_modules/component-ajax/index.js', {expose: 'ajax'});
+var each = require('./node_modules/component-each/index.js', {expose: 'each'});
+var store = require('./node_modules/component-cookie/index.js', {expose: 'cookie'});
+var emitter = require('./node_modules/component-emitter/index.js', {expose: 'emitter'});
 
 module.exports = Retsly;
 
@@ -350,7 +350,7 @@ Retsly.prototype.del = function(url, body, cb) {
 
 Retsly.prototype.request = function(method, url, query, cb) {
   var self = this;
-  
+
   // query is optional
   if (undefined === cb && 'function' == typeof query) {
     cb = query;
