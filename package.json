@@ -1,0 +1,38 @@
+{
+  "name": "retsly-js-sdk",
+  "version": "0.6.6",
+  "author": {
+    "name": "Phil Jepsen",
+    "email": "phil@rets.ly"
+  },
+  "description": "Retsly JavaScript SDK",
+  "main": "./index.js",
+  "browser": "./index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Retsly/retsly-js-sdk.git"
+  },
+  "dependencies": {
+    "socket.io-client":"1.1.0",
+    "extend": "2.0.0",
+    "qs": "2.3.3",
+    "component-each": "0.2.5",
+    "component-ajax": "^0.0.2",
+    "component-emitter": "1.1.3",
+    "component-cookie": "git+ssh://git@github.com:wired8/cookie#master"
+  },
+  "keywords": [
+    "retsly",
+    "sdk",
+    "browser",
+    "commonjs",
+    "browserify"
+  ],
+  "readmeFilename": "Readme.md",
+  "bugs": {
+    "url": "https://github.com/Retsly/retsly-js-sdk/issues"
+  },
+  "homepage": "https://github.com/Retsly/retsly-js-sdk",
+  "_id": "retsly-js-sdk@0.6.6",
+  "_from": "retsly-js-sdk@^0.6.6"
+}
