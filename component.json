@@ -2,7 +2,7 @@
   "name": "retsly-js-sdk",
   "repo": "Retsly/retsly-js-sdk",
   "description": "Retsly JavaScript SDK",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "dependencies": {
     "retsly/ajax": "^0.0.4",
     "retsly/socket.io-client":"1.1.1",
