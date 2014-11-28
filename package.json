@@ -27,6 +27,7 @@
     "component-cookie": "Retsly/cookie"
   },
   "devDependencies": {
+    "mocha-phantomjs": "*",
     "mocha": "1.14.0",
     "mochify": "*"
   },

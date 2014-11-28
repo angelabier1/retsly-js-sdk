@@ -14,7 +14,7 @@ npm: package.json
 
 test: build npm
 	@./node_modules/.bin/mochify ./test/test-browserify.js -R spec
-	@mocha-phantomjs test/test.html
+	@./node_modules/.bin/mocha-phantomjs test/test.html
 
 clean:
 	@rm -fr build components node_modules
