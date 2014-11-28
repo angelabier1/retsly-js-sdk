@@ -15,6 +15,13 @@ Include the hosted SDK in your HTML header:
 ```html
 <script src='https://rets.ly/js/sdk'></script>
 ```
+#### Use with browserify
+
+Install with [npm](http://github.com/Retsly/retsly-js-sdk):
+
+```bash
+$ npm install retsly-js-sdk
+```
 
 #### Use with component
 
@@ -99,7 +106,7 @@ functionality within the Retsly community.
 
 (The MIT License)
 
-Copyright (c) 2013 Retsly Software Inc <support@rets.ly>
+Copyright (c) 2014 Retsly Software Inc <support@rets.ly>
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the 'Software'),
