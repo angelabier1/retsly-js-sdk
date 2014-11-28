@@ -4,8 +4,6 @@ build:
     - script:
         name: chown for npm
         code: sudo chown -R $USER /usr/local
-    - npm-install:
-        options: -g -f component@1.0.0-rc5
     - script:
         name: github auth
         code: |
