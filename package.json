@@ -24,7 +24,7 @@
     "component-each": "0.2.5",
     "component-ajax": "^0.0.2",
     "component-emitter": "1.1.3",
-    "component-cookie": "git+ssh://git@github.com:Retsly/cookie.git#master"
+    "component-cookie": "Retsly/cookie"
   },
   "devDependencies": {
     "mocha": "1.14.0",
