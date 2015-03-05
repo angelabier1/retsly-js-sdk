@@ -5,7 +5,7 @@ var extend = require('extend');
 var io = require('socket.io-client');
 var ajax = require('ajax');
 var each = require('each');
-var qs = require('querystring').stringify;
+var qs = require('qs').stringify;
 var store = require('cookie');
 var emitter = require('emitter');
 
