@@ -8,7 +8,7 @@
     "retsly/socket.io-client":"1.1.1",
     "segmentio/extend": "1.0.0",
     "component/each": "0.2.5",
-    "tj/node-querystring": "0.6.6",
+    "retsly/qs": "v2.3.4",
     "component/cookie": "1.0.1",
     "component/emitter": "1.1.3"
   },
