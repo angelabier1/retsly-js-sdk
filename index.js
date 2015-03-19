@@ -286,7 +286,7 @@ Retsly.prototype.getToken = Retsly.prototype.getAppToken = function() {
  */
 Retsly.prototype.setUserToken = function(token) {
   this.token = token;
-  store('retsly.uid', token);
+  store('retsly.uid', token, { path: '/' });
   return this;
 };
 
