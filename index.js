@@ -398,7 +398,8 @@ Retsly.prototype.request = function(method, url, query, cb) {
       if (window.XMLHttpRequest && !window.XDomainRequest)
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     },
-    error: function(res, status, xhr) {
+    error: function(xhr, type, settings) {
+      var res = xhr.responseText ? JSON.parse(xhr.responseText) : xhr;
       log(method, url, query, res);
       self.validateSession(res.status);
       if(typeof cb === 'function') cb(res);
