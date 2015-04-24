@@ -69,7 +69,7 @@ for instructions.
 var retsly = require('retsly-js-sdk');
 var retsly = new Retsly(YOUR_CLIENT_ID, YOUR_JS_TOKEN);
 retsly.ready(function(){
-  retsly.get('/api/v1/listing/sandicor.json', {limit: 10}, function(res){
+  retsly.get('/api/v1/listing/<vendor>.json', {limit: 10}, function(res){
     if (!res.success) throw new Error(res.bundle);
     console.log(res);
   });
