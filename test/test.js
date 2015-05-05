@@ -10,7 +10,7 @@ describe('retsly-js-sdk', function () {
     assert('function' == typeof Retsly);
     done();
   });
-  
+
   it('expects three arguments', function (done) {
     assert(3 == Retsly.length);
     assert.throws(function(){new Retsly()});
@@ -23,14 +23,6 @@ describe('retsly-js-sdk', function () {
     assert('bar' == r.options.foo);
     done();
   });
-
-  it('has a socket.io connection', function (done) {
-    var r = new Retsly('test', 'test');
-    r.doSockets();
-    assert(r.io);
-    done();
-  });
-
 
   it('setup is chainable', function (done) {
     Retsly

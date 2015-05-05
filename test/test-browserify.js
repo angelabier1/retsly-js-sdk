@@ -24,14 +24,6 @@ describe('retsly-js-sdk', function () {
     done();
   });
 
-  it('has a socket.io connection', function (done) {
-    var r = new Retsly('test', 'test');
-    r.doSockets();
-    assert(r.io);
-    done();
-  });
-
-
   it('setup is chainable', function (done) {
     Retsly
         .client('test')
