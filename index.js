@@ -2,7 +2,6 @@
  * Dependencies
  */
 var extend = require('extend');
-var io = require('socket.io-client');
 var ajax = require('ajax');
 var each = require('each');
 var qs = require('qs').stringify;
@@ -42,47 +41,13 @@ function Retsly (client_id, token, options) {
   if(_attempts === 0)
     this.session(this.connect.bind(this));
 
-  // css causes (derp) session issues
-  // TODO: @slajax fix
-  // this.css();
-
   emitter(this);
-
-}
-
-Retsly.prototype.doSockets = function() {
-
-  // set up socket.io connection
-  this.io = io.connect(getDomain(), {
-    'reconnectionDelay': 5000, // retry every 2 seconds
-    //'reconnection limit': 100, // defaults to Infinity
-    'timeout': 10000 // defaults to 10
-  });
-
-
-  this.io.on('connection', function(socket) {
-    debug('<-- Connected to Retsly Sockets!');
-    // try to establish a session, then connect
-  }.bind(this))
-
-  // if we disconnect, try to reconnet
-  this.io.on('connect_error', function() {
-    debug('connect error');
-  });
-
-  this.io.on('reconnect_error', function() {
-    debug('reconnect error');
-  });
-
-  this.io.on('reconnect_failed', function() {
-    debug('reconnect failed')
-  }.bind(this))
-
 }
 
 /**
  * debug messages print if true
  */
+
 Retsly.debug = false;
 
 /**
@@ -97,7 +62,7 @@ Retsly.create = function create (client, token, opts) {
   opts = opts || _opts;
   if (!s && !client) throw new Error('call Retsly.create() with client id and options');
   return (s && _retsly) ? _retsly : (_retsly = new Retsly(client, token, opts));
-}
+};
 
 /**
  * Set the Retsly Client ID
@@ -147,20 +112,13 @@ Retsly.prototype.css = function() {
   css.id = 'retsly-css-sdk';
   css.media = 'all';
   css.rel = 'stylesheet';
-  css.href = getDomain()+'/sdk/sdk.css'
+  css.href = getDomain()+'/sdk/sdk.css';
   document.getElementsByTagName('head')[0].appendChild(css);
 
 };
 
-Retsly.socketApiCallbacks =  {};
-
 Retsly.prototype.connect = function(rsid) {
-
-  // force multiple connections if cookie not set
-  // but only attempt to connect 3 times then continue on
-  if(_attempts > 2) return this.ready();
-
-  debug('--> Requesting Retsly Session... attempts: '+_attempts);
+  debug('--> Setting Retsly Session');
 
   // on first try, express will not be able to return a sid
   this.sid = decodeURIComponent(rsid);
@@ -169,50 +127,16 @@ Retsly.prototype.connect = function(rsid) {
   if(!this.sid || this.sid === 'false') return this.session(this.connect.bind(this));
 
   setCookie('retsly.sid', this.sid, 10800000); // 3hrs
-  this.doSockets();
 
-  // tell rets.io to listen to sid for this client
-  this.io.emit('session', { sid: this.sid });
-
-  // listen for rets.io to return sid confirmation
-  this.io.on('sessionResponse', function(data){
-    // session sid established, syncing cookie
-    (data.bundle === this.sid)
-        ? debug('<-- Retsly Session Established! ', this.sid)
-        : debug('XXX - Sessions do not match', data.bundle);
-
-    this.ready();
-  }.bind(this));
-
-  this.io.on('api', function(response){
-    var apiCallback = Retsly.socketApiCallbacks[response.url];
-    if(apiCallback && response.status === 200) apiCallback(null,response.bundle);
-    else if(apiCallback) apiCallback(response);
-    else throw new Error('Retsly Socket route not defined');
-  });
-
-};
-
-/**
- * Allows you to request data over sockets
- */
-Retsly.prototype.apiRoute = function apiRoute(url,method,args,cb) {
-  var data = {'url':url,'method':method,'args':args};
-  Retsly.socketApiCallbacks[url] = cb;
-  debug('socket api call : ', data);
-  this.io.emit('api', data);
+  this.ready();
 };
 
 Retsly.prototype.session = function(cb) {
   cb = cb || function() {};
   _attempts++;
 
-  var data = { }
+  var data = { };
 
-  /*
-   *  if (window.XDomainRequest)
-   *    data.session_id = this.getCookie('retsly.sid');
-   */
   data.origin = getOrigin();
 
   ajax({
@@ -304,7 +228,7 @@ Retsly.prototype.getUserToken = function() {
  */
 Retsly.prototype.getClient = function() {
   return this.client_id;
-}
+};
 
 /**
  * Get the Retsly API Host
@@ -370,13 +294,14 @@ Retsly.prototype.request = function(method, url, query, cb) {
     options.query.access_token = this.getUserToken();
   else if(this.getAppToken())
     options.query.access_token = this.getAppToken();
-  else return cb({ success: false, status: 401, bundle: 'No token set'})
+  else
+    return cb({ success: false, status: 401, bundle: 'No token set'});
 
   if('get' === method || 'delete' === method) {
     options.query = extend(options.query, query);
   } else if('put' === method || 'post' === method) {
-    delete query['client_id'];
-    delete query['access_token'];
+    delete query.client_id;
+    delete query.access_token;
     options.body = query;
   }
 
@@ -412,15 +337,14 @@ Retsly.prototype.request = function(method, url, query, cb) {
   });
 
   function log(method, url, query, res) {
-    delete query['client_id'];
-    delete query['access_token'];
+    delete query.client_id;
+    delete query.access_token;
     debug(method, '<-- ', url, query);
     debug(' |---- response: ', res);
   }
 
   return this;
 };
-
 
 /**
  * Returns a Retsly API compatible query string from a JSON object
@@ -455,7 +379,7 @@ var getOrigin = Retsly.prototype.getOrigin = function () {
 /**
  * Cookie getter
  */
-var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
+Retsly.prototype.getCookie = function(name,c,C,i) {
   c = document.cookie.split('; ');
   var cookies = {};
   for(i=c.length-1; i>=0; i--){
@@ -463,7 +387,7 @@ var getCookie = Retsly.prototype.getCookie = function(name,c,C,i) {
     cookies[C[0]] = C[1];
   }
   return cookies[name];
-}
+};
 
 /**
  * Cookie setter
