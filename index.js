@@ -346,7 +346,6 @@ Retsly.prototype.request = function(method, url, query, cb) {
   return this;
 };
 
-
 /**
  * Returns a Retsly API compatible query string from a JSON object
  */
@@ -371,10 +370,10 @@ var getDomain = Retsly.prototype.getDomain = function () {
  * Returns the origin for XHR CORS requests
  */
 var getOrigin = Retsly.prototype.getOrigin = function () {
-  return document.location.protocol +
-      '//' +
-      document.domain +
-      (document.location.port ? (':' + document.location.port) : '');
+  return document.location.protocol
+      + '//'
+      + document.domain
+      + (document.location.port ? (':' + document.location.port) : '');
 };
 
 /**
